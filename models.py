@@ -41,6 +41,12 @@ class User(UserMixin, db.Model):
     gender = db.Column(db.String(10), nullable=False)
     department = db.Column(db.String(100))
     shift_time = db.Column(db.String(50))  # مثل: "4:00 م - 8:00 م"
+    
+    # معلومات الجدول الدراسي
+    period = db.Column(db.String(50))  # الفترة: الأولى، الثانية، الثالثة، الرابعة، السادسة
+    work_time = db.Column(db.String(50))  # الوقت: 4م-8م، 10ص-2م، الخ
+    rest_days = db.Column(db.String(100))  # أيام الراحة: الاثنين والثلاثاء، الجمعة والسبت، الخ
+    
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     

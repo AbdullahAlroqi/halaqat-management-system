@@ -44,8 +44,9 @@
                                     <th>#</th>
                                     <th>الاسم</th>
                                     <th>رقم الهوية</th>
+                                    <th>الفترة</th>
+                                    <th>الوقت</th>
                                     <th>القسم</th>
-                                    <th>الجنس</th>
                                     <th>المشرف</th>
                                     <th>الحالة</th>
                                     <th>إجراءات</th>
@@ -56,9 +57,16 @@
                                 <tr>
                                     <td>{{ loop.index }}</td>
                                     <td>{{ emp.name }}</td>
-                                    <td>{{ emp.national_id }}</td>
+                                    <td><code>{{ emp.national_id }}</code></td>
+                                    <td>
+                                        {% if emp.period %}
+                                        <span class="badge bg-info">{{ emp.period }}</span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ emp.work_time or '-' }}</td>
                                     <td>{{ emp.department or '-' }}</td>
-                                    <td>{{ emp.gender }}</td>
                                     <td>
                                         {% if emp.supervisor %}
                                         {{ emp.supervisor.name }}

@@ -26,10 +26,16 @@
     {% for item in schedules_data %}
     <div class="card-islamic mb-3">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <span>
+            <div>
                 <i class="fas fa-user ms-2"></i>
-                {{ item.employee.name }} - {{ item.employee.national_id }}
-            </span>
+                <strong>{{ item.employee.name }}</strong> - {{ item.employee.national_id }}
+                <br>
+                <small class="text-muted">
+                    {% if item.employee.period %}الفترة: {{ item.employee.period }} | {% endif %}
+                    {% if item.employee.work_time %}الوقت: {{ item.employee.work_time }} | {% endif %}
+                    {% if item.employee.rest_days %}الراحة: {{ item.employee.rest_days }}{% endif %}
+                </small>
+            </div>
             <form method="POST" action="{{ url_for('supervisor.copy_schedule', employee_id=item.employee.id) }}" 
                   style="display: inline;" onsubmit="return confirm('هل تريد نسخ هذا الجدول للشهر القادم؟');">
                 <button type="submit" class="btn btn-sm btn-islamic-outline">

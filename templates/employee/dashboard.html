@@ -100,6 +100,18 @@
                                 <td><strong>الجنس:</strong></td>
                                 <td>{{ current_user.gender }}</td>
                             </tr>
+                            <tr>
+                                <td><strong>الفترة:</strong></td>
+                                <td>{{ current_user.period or 'غير محدد' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>الوقت:</strong></td>
+                                <td>{{ current_user.work_time or 'غير محدد' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>أيام الراحة:</strong></td>
+                                <td>{{ current_user.rest_days or 'غير محدد' }}</td>
+                            </tr>
                             {% if current_user.supervisor %}
                             <tr>
                                 <td><strong>المشرف:</strong></td>

@@ -224,17 +224,28 @@ def upload_employees():
                 skipped_count = 0
                 
                 for row in sheet.iter_rows(min_row=2, values_only=True):
-                    if not row[0]:  # رقم الهوية
+                    # التحقق من وجود بيانات
+                    if not row or not row[0]:
                         continue
                     
-                    national_id = str(row[0]).strip()
-                    name = str(row[1]).strip() if row[1] else ''
-                    department = str(row[2]).strip() if row[2] else ''
-                    gender = str(row[3]).strip() if row[3] else 'ذكر'
+                    # قراءة البيانات بالترتيب الصحيح (حسب الصورة)
+                    name = str(row[0]).strip() if row[0] else ''  # الاسم
+                    national_id = str(row[1]).strip() if row[1] else ''  # الهوية
+                    period = str(row[2]).strip() if row[2] else ''  # الفترة
+                    work_time = str(row[3]).strip() if row[3] else ''  # الوقت
+                    rest_days = str(row[4]).strip() if row[4] else ''  # أيام الراحة
+                    department = str(row[5]).strip() if len(row) > 5 and row[5] else 'الحلقات'  # القسم
+                    gender = str(row[6]).strip() if len(row) > 6 and row[6] else 'ذكر'  # الجنس
                     
                     # التحقق من وجود الموظف
                     existing = User.query.filter_by(national_id=national_id).first()
                     if existing:
+                        # تحديث معلومات الجدول للموظف الموجود
+                        existing.period = period
+                        existing.work_time = work_time
+                        existing.rest_days = rest_days
+                        existing.department = department
+                        existing.gender = gender
                         skipped_count += 1
                         continue
                     
@@ -243,7 +254,10 @@ def upload_employees():
                         name=name,
                         role=Role.EMPLOYEE,
                         gender=gender,
-                        department=department
+                        department=department,
+                        period=period,
+                        work_time=work_time,
+                        rest_days=rest_days
                     )
                     employee.set_password(national_id)
                     
@@ -274,12 +288,9 @@ def download_template():
     sheet = wb.active
     sheet.title = "الموظفين"
     
-    # العناوين
-    headers = ['رقم الهوية', 'الاسم', 'القسم', 'الجنس']
+    # العناوين بالترتيب الصحيح
+    headers = ['الاسم', 'الهوية', 'الفترة', 'الوقت', 'الراحة', 'القسم', 'الجنس']
     sheet.append(headers)
-    
-    # صف مثال
-    sheet.append(['1234567890', 'محمد أحمد', 'القرآن الكريم', 'ذكر'])
     
     # حفظ في الذاكرة
     output = BytesIO()
@@ -759,3 +770,50 @@ def review_leave(request_id):
     db.session.commit()
     
     return redirect(url_for('admin.leave_requests'))
+
+# عرض جدول الحلقات
+@admin_bp.route('/schedules-table')
+@login_required
+def schedules_table():
+    if not admin_required():
+        flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
+        return redirect(url_for('index'))
+    
+    # جلب جميع المعلمين (الموظفين) مع معلومات جدولهم
+    employees = User.query.filter_by(role=Role.EMPLOYEE, is_active=True).order_by(User.name).all()
+    
+    return render_template('admin/schedules_table.html', employees=employees)
+
+# حذف جميع بيانات المعلمين
+@admin_bp.route('/delete-all-employees', methods=['POST'])
+@login_required
+def delete_all_employees():
+    if current_user.role != Role.MAIN_ADMIN:
+        flash('ليس لديك صلاحية لهذه العملية', 'danger')
+        return redirect(url_for('admin.schedules_table'))
+    
+    try:
+        # حذف جميع سجلات المعلمين
+        employees = User.query.filter_by(role=Role.EMPLOYEE).all()
+        
+        for emp in employees:
+            # حذف السجلات المرتبطة
+            Attendance.query.filter_by(employee_id=emp.id).delete()
+            LeaveRequest.query.filter_by(employee_id=emp.id).delete()
+            Schedule.query.filter_by(employee_id=emp.id).delete()
+            
+            # حذف الإشعارات المرتبطة
+            from models import Notification
+            Notification.query.filter_by(user_id=emp.id).delete()
+            
+            # حذف الموظف
+            db.session.delete(emp)
+        
+        db.session.commit()
+        flash(f'تم حذف جميع بيانات المعلمين بنجاح ({len(employees)} معلم)', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'حدث خطأ: {str(e)}', 'danger')
+    
+    return redirect(url_for('admin.schedules_table'))

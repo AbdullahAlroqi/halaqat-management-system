@@ -33,7 +33,7 @@
                                     <tr>
                                         <th>#</th>
                                         <th>الموظف</th>
-                                        <th>القسم</th>
+                                        <th>الفترة/الوقت</th>
                                         <th>الحالة</th>
                                         <th>ملاحظات</th>
                                     </tr>
@@ -42,8 +42,20 @@
                                     {% for emp in subordinates %}
                                     <tr>
                                         <td>{{ loop.index }}</td>
-                                        <td>{{ emp.name }}</td>
-                                        <td>{{ emp.department or '-' }}</td>
+                                        <td>
+                                            {{ emp.name }}
+                                            <br><small class="text-muted">{{ emp.department or 'غير محدد' }}</small>
+                                        </td>
+                                        <td>
+                                            {% if emp.period or emp.work_time %}
+                                            <small>
+                                                {% if emp.period %}<span class="badge bg-info">{{ emp.period }}</span>{% endif %}
+                                                {% if emp.work_time %}<br>{{ emp.work_time }}{% endif %}
+                                            </small>
+                                            {% else %}
+                                            <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
                                         <td>
                                             <select name="status_{{ emp.id }}" class="form-select">
                                                 <option value="">اختر الحالة</option>

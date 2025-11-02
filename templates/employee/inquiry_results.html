@@ -27,10 +27,12 @@
                             <p><strong>الاسم:</strong> {{ user.name }}</p>
                             <p><strong>رقم الهوية:</strong> {{ user.national_id }}</p>
                             <p><strong>القسم:</strong> {{ user.department or 'غير محدد' }}</p>
+                            <p><strong>الجنس:</strong> {{ user.gender }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>الجنس:</strong> {{ user.gender }}</p>
-                            <p><strong>الفترة:</strong> {{ user.shift_time or 'غير محدد' }}</p>
+                            <p><strong>الفترة:</strong> {{ user.period or 'غير محدد' }}</p>
+                            <p><strong>الوقت:</strong> {{ user.work_time or 'غير محدد' }}</p>
+                            <p><strong>أيام الراحة:</strong> {{ user.rest_days or 'غير محدد' }}</p>
                             {% if user.supervisor %}
                             <p><strong>المشرف:</strong> {{ user.supervisor.name }}</p>
                             {% endif %}
@@ -47,37 +49,50 @@
             <div class="card-islamic">
                 <div class="card-header">
                     <i class="fas fa-calendar-alt ms-2"></i>
-                    الجدول الأسبوعي
+                    معلومات الجدول
                 </div>
                 <div class="card-body">
-                    {% if schedules %}
-                    <div class="table-responsive">
-                        <table class="table table-islamic">
-                            <thead>
-                                <tr>
-                                    <th>اليوم</th>
-                                    <th>الفترة</th>
-                                    <th>الحالة</th>
-                                    <th>من تاريخ</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for schedule in schedules %}
-                                <tr>
-                                    <td>{{ schedule.day_of_week }}</td>
-                                    <td>{{ schedule.shift_time }}</td>
-                                    <td>
-                                        {% if schedule.is_rest_day %}
-                                        <span class="badge bg-warning">يوم راحة</span>
-                                        {% else %}
-                                        <span class="badge bg-success">يوم عمل</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ schedule.start_date }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    {% if user.period or user.work_time or user.rest_days %}
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <i class="fas fa-calendar-day fa-2x text-primary mb-2"></i>
+                                <h5>الفترة</h5>
+                                <p class="mb-0">
+                                    {% if user.period %}
+                                    <span class="badge bg-info fs-6">{{ user.period }}</span>
+                                    {% else %}
+                                    <span class="text-muted">غير محدد</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <i class="fas fa-clock fa-2x text-success mb-2"></i>
+                                <h5>وقت العمل</h5>
+                                <p class="mb-0">
+                                    {% if user.work_time %}
+                                    <strong>{{ user.work_time }}</strong>
+                                    {% else %}
+                                    <span class="text-muted">غير محدد</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <i class="fas fa-calendar-times fa-2x text-warning mb-2"></i>
+                                <h5>أيام الراحة</h5>
+                                <p class="mb-0">
+                                    {% if user.rest_days %}
+                                    <strong>{{ user.rest_days }}</strong>
+                                    {% else %}
+                                    <span class="text-muted">غير محدد</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
                     </div>
                     {% else %}
                     <div class="alert alert-warning">
