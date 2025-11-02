@@ -369,6 +369,45 @@ def add_leave_type():
     flash('تم إضافة نوع الإجازة بنجاح', 'success')
     return redirect(url_for('admin.leave_types'))
 
+# تعديل نوع إجازة
+@admin_bp.route('/leave-types/edit/<int:leave_type_id>', methods=['POST'])
+@login_required
+def edit_leave_type(leave_type_id):
+    if not admin_required():
+        return jsonify({'success': False}), 403
+    
+    leave_type = LeaveType.query.get_or_404(leave_type_id)
+    
+    leave_type.name = request.form.get('name')
+    leave_type.max_days = request.form.get('max_days', type=int)
+    leave_type.requires_attachment = request.form.get('requires_attachment') == 'on'
+    leave_type.is_active = request.form.get('is_active') == 'on'
+    
+    db.session.commit()
+    
+    flash('تم تعديل نوع الإجازة بنجاح', 'success')
+    return redirect(url_for('admin.leave_types'))
+
+# حذف نوع إجازة
+@admin_bp.route('/leave-types/delete/<int:leave_type_id>', methods=['POST'])
+@login_required
+def delete_leave_type(leave_type_id):
+    if not admin_required():
+        return jsonify({'success': False}), 403
+    
+    leave_type = LeaveType.query.get_or_404(leave_type_id)
+    
+    # التحقق من عدم وجود طلبات إجازة مرتبطة بهذا النوع
+    if leave_type.leave_requests.count() > 0:
+        flash('لا يمكن حذف نوع الإجازة لأنه مرتبط بطلبات إجازة', 'danger')
+        return redirect(url_for('admin.leave_types'))
+    
+    db.session.delete(leave_type)
+    db.session.commit()
+    
+    flash('تم حذف نوع الإجازة بنجاح', 'success')
+    return redirect(url_for('admin.leave_types'))
+
 # إعدادات النظام
 @admin_bp.route('/settings', methods=['GET', 'POST'])
 @login_required

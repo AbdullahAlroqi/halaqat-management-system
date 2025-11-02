@@ -37,6 +37,7 @@
                                     <th>يتطلب مرفق</th>
                                     <th>الحالة</th>
                                     <th>تاريخ الإنشاء</th>
+                                    <th>الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -60,6 +61,14 @@
                                         {% endif %}
                                     </td>
                                     <td>{{ lt.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editLeaveTypeModal{{ lt.id }}">
+                                            <i class="fas fa-edit"></i> تعديل
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteLeaveTypeModal{{ lt.id }}">
+                                            <i class="fas fa-trash"></i> حذف
+                                        </button>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -115,4 +124,74 @@
         </div>
     </div>
 </div>
+
+<!-- نوافذ تعديل أنواع الإجازات -->
+{% for lt in leave_types %}
+<div class="modal fade" id="editLeaveTypeModal{{ lt.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تعديل نوع الإجازة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.edit_leave_type', leave_type_id=lt.id) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name{{ lt.id }}" class="form-label">اسم الإجازة *</label>
+                        <input type="text" class="form-control" id="name{{ lt.id }}" name="name" value="{{ lt.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="max_days{{ lt.id }}" class="form-label">الحد الأقصى (أيام) *</label>
+                        <input type="number" class="form-control" id="max_days{{ lt.id }}" name="max_days" 
+                               min="1" value="{{ lt.max_days }}" required>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="requires_attachment{{ lt.id }}" 
+                               name="requires_attachment" {% if lt.requires_attachment %}checked{% endif %}>
+                        <label class="form-check-label" for="requires_attachment{{ lt.id }}">
+                            يتطلب مرفق
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="is_active{{ lt.id }}" 
+                               name="is_active" {% if lt.is_active %}checked{% endif %}>
+                        <label class="form-check-label" for="is_active{{ lt.id }}">
+                            نشط
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- نوافذ حذف أنواع الإجازات -->
+<div class="modal fade" id="deleteLeaveTypeModal{{ lt.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من حذف نوع الإجازة <strong>{{ lt.name }}</strong>؟</p>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    لا يمكن التراجع عن هذه العملية.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <form method="POST" action="{{ url_for('admin.delete_leave_type', leave_type_id=lt.id) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
 {% endblock %}
