@@ -817,3 +817,71 @@ def delete_all_employees():
         flash(f'حدث خطأ: {str(e)}', 'danger')
     
     return redirect(url_for('admin.schedules_table'))
+
+# صفحة إعدادات الحساب
+@admin_bp.route('/account-settings', methods=['GET', 'POST'])
+@login_required
+def account_settings():
+    if not admin_required():
+        flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        # تغيير كلمة السر
+        if action == 'change_password':
+            current_password = request.form.get('current_password')
+            new_password = request.form.get('new_password')
+            confirm_password = request.form.get('confirm_password')
+            
+            # التحقق من كلمة السر الحالية
+            if not current_user.check_password(current_password):
+                flash('كلمة السر الحالية غير صحيحة', 'danger')
+                return redirect(url_for('admin.account_settings'))
+            
+            # التحقق من تطابق كلمة السر الجديدة
+            if new_password != confirm_password:
+                flash('كلمة السر الجديدة غير متطابقة', 'danger')
+                return redirect(url_for('admin.account_settings'))
+            
+            # التحقق من طول كلمة السر
+            if len(new_password) < 6:
+                flash('كلمة السر يجب أن تكون 6 أحرف على الأقل', 'danger')
+                return redirect(url_for('admin.account_settings'))
+            
+            # تغيير كلمة السر
+            current_user.set_password(new_password)
+            db.session.commit()
+            flash('تم تغيير كلمة السر بنجاح', 'success')
+            return redirect(url_for('admin.account_settings'))
+        
+        # تغيير رقم الهوية
+        elif action == 'change_national_id':
+            new_national_id = request.form.get('new_national_id')
+            password_confirm = request.form.get('password_confirm')
+            
+            # التحقق من كلمة السر
+            if not current_user.check_password(password_confirm):
+                flash('كلمة السر غير صحيحة', 'danger')
+                return redirect(url_for('admin.account_settings'))
+            
+            # التحقق من صحة رقم الهوية
+            if len(new_national_id) != 10 or not new_national_id.isdigit():
+                flash('رقم الهوية يجب أن يكون 10 أرقام', 'danger')
+                return redirect(url_for('admin.account_settings'))
+            
+            # التحقق من عدم تكرار رقم الهوية
+            existing = User.query.filter_by(national_id=new_national_id).first()
+            if existing and existing.id != current_user.id:
+                flash('رقم الهوية موجود لمستخدم آخر', 'danger')
+                return redirect(url_for('admin.account_settings'))
+            
+            # تغيير رقم الهوية
+            old_id = current_user.national_id
+            current_user.national_id = new_national_id
+            db.session.commit()
+            flash(f'تم تغيير رقم الهوية من {old_id} إلى {new_national_id}', 'success')
+            return redirect(url_for('admin.account_settings'))
+    
+    return render_template('admin/account_settings.html')
