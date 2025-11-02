@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>غير متصل بالإنترنت</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0d7377 0%, #0a5d60 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            direction: rtl;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .icon {
+            font-size: 5rem;
+            margin-bottom: 2rem;
+            animation: pulse 2s infinite;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+        
+        .btn {
+            background: white;
+            color: #0d7377;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">📡</div>
+        <h1>غير متصل بالإنترنت</h1>
+        <p>يبدو أنك غير متصل بالإنترنت حالياً</p>
+        <p>الرجاء التحقق من اتصالك والمحاولة مرة أخرى</p>
+        <button class="btn" onclick="location.reload()">
+            إعادة المحاولة
+        </button>
+    </div>
+</body>
+</html>

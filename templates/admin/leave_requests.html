@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}طلبات الإجازات{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-inbox ms-2"></i>
+                طلبات الإجازات
+            </h2>
+        </div>
+    </div>
+    
+    <!-- فلتر الحالة -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('admin.leave_requests', status='قيد الانتظار') }}" 
+                   class="btn {{ 'btn-islamic' if status_filter == 'قيد الانتظار' else 'btn-islamic-outline' }}">
+                    <i class="fas fa-clock ms-1"></i>
+                    قيد الانتظار
+                </a>
+                <a href="{{ url_for('admin.leave_requests', status='مقبول') }}" 
+                   class="btn {{ 'btn-islamic' if status_filter == 'مقبول' else 'btn-islamic-outline' }}">
+                    <i class="fas fa-check ms-1"></i>
+                    مقبول
+                </a>
+                <a href="{{ url_for('admin.leave_requests', status='مرفوض') }}" 
+                   class="btn {{ 'btn-islamic' if status_filter == 'مرفوض' else 'btn-islamic-outline' }}">
+                    <i class="fas fa-times ms-1"></i>
+                    مرفوض
+                </a>
+                <a href="{{ url_for('admin.leave_requests', status='all') }}" 
+                   class="btn {{ 'btn-islamic' if status_filter == 'all' else 'btn-islamic-outline' }}">
+                    <i class="fas fa-list ms-1"></i>
+                    الكل
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- الطلبات -->
+    <div class="row">
+        <div class="col-12">
+            {% if requests %}
+            <div class="card-islamic">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-islamic">
+                            <thead>
+                                <tr>
+                                    <th>الموظف</th>
+                                    <th>نوع الإجازة</th>
+                                    <th>من تاريخ</th>
+                                    <th>إلى تاريخ</th>
+                                    <th>الأيام</th>
+                                    <th>السبب</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for req in requests %}
+                                <tr>
+                                    <td>{{ req.employee.name }}</td>
+                                    <td>{{ req.leave_type.name }}</td>
+                                    <td>{{ req.start_date.strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ req.end_date.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ req.days_count }} يوم</span>
+                                    </td>
+                                    <td>{{ req.reason[:50] }}...</td>
+                                    <td>
+                                        {% if req.status == 'قيد الانتظار' %}
+                                        <span class="badge bg-warning">{{ req.status }}</span>
+                                        {% elif req.status == 'مقبول' %}
+                                        <span class="badge bg-success">{{ req.status }}</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">{{ req.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if req.status == 'قيد الانتظار' %}
+                                        <button type="button" class="btn btn-sm btn-success" onclick="openApproveModal({{ req.id }})">
+                                            <i class="fas fa-check ms-1"></i>
+                                            قبول
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="openRejectModal({{ req.id }})">
+                                            <i class="fas fa-times ms-1"></i>
+                                            رفض
+                                        </button>
+                                        {% else %}
+                                        <span class="text-muted">تمت المراجعة</span>
+                                        {% if req.review_notes %}
+                                        <br>
+                                        <small>ملاحظات: {{ req.review_notes }}</small>
+                                        {% endif %}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">لا توجد طلبات</h4>
+                <p class="text-muted">لا توجد طلبات إجازات {{ status_filter if status_filter != 'all' else '' }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modals خارج الجدول -->
+{% for req in requests %}
+{% if req.status == 'قيد الانتظار' %}
+<!-- Modal القبول -->
+<div class="modal fade" id="approveModal{{ req.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">قبول طلب الإجازة</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.review_leave', request_id=req.id) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>الموظف:</strong></label>
+                        <p>{{ req.employee.name }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>نوع الإجازة:</strong></label>
+                        <p>{{ req.leave_type.name }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>المدة:</strong></label>
+                        <p>من {{ req.start_date.strftime('%Y-%m-%d') }} إلى {{ req.end_date.strftime('%Y-%m-%d') }} ({{ req.days_count }} يوم)</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>السبب:</strong></label>
+                        <p>{{ req.reason }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">ملاحظات القبول (اختياري):</label>
+                        <textarea class="form-control" name="notes" rows="2" placeholder="مثال: تم الموافقة على الطلب"></textarea>
+                    </div>
+                    <input type="hidden" name="action" value="approve">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check ms-1"></i> تأكيد القبول
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal الرفض -->
+<div class="modal fade" id="rejectModal{{ req.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">رفض طلب الإجازة</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.review_leave', request_id=req.id) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>الموظف:</strong></label>
+                        <p>{{ req.employee.name }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>نوع الإجازة:</strong></label>
+                        <p>{{ req.leave_type.name }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>المدة:</strong></label>
+                        <p>من {{ req.start_date.strftime('%Y-%m-%d') }} إلى {{ req.end_date.strftime('%Y-%m-%d') }} ({{ req.days_count }} يوم)</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>السبب:</strong></label>
+                        <p>{{ req.reason }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">سبب الرفض (اختياري):</label>
+                        <textarea class="form-control" name="notes" rows="2" placeholder="مثال: تعارض مع مواعيد العمل"></textarea>
+                    </div>
+                    <input type="hidden" name="action" value="reject">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times ms-1"></i> تأكيد الرفض
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<script>
+function openApproveModal(reqId) {
+    var myModal = new bootstrap.Modal(document.getElementById('approveModal' + reqId));
+    myModal.show();
+}
+
+function openRejectModal(reqId) {
+    var myModal = new bootstrap.Modal(document.getElementById('rejectModal' + reqId));
+    myModal.show();
+}
+</script>
+
+{% endblock %}

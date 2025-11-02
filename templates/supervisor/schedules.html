@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}رفع الجداول{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-calendar-plus ms-2"></i>
+                رفع جداول الموظفين
+            </h2>
+        </div>
+    </div>
+    
+    <div class="row mb-3">
+        <div class="col-12 text-end">
+            <a href="{{ url_for('supervisor.view_schedules') }}" class="btn btn-islamic-outline">
+                <i class="fas fa-eye ms-1"></i>
+                عرض جميع الجداول
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card-islamic">
+                <div class="card-header">
+                    <i class="fas fa-info-circle ms-2"></i>
+                    تعليمات
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li>اختر الموظف وحدد أيام العمل ووقت الدوام بالساعة</li>
+                        <li>يمكنك إضافة جداول لأكثر من موظف في نفس الوقت</li>
+                        <li>الأيام غير المحددة ستكون أيام راحة تلقائياً</li>
+                        <li>يمكنك طباعة الجداول بعد الحفظ</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <form method="POST" action="{{ url_for('supervisor.schedules') }}" class="mt-4">
+        <div id="schedules-container">
+            {% if subordinates %}
+            {% for emp in subordinates %}
+            <div class="card-islamic mb-3 employee-schedule">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fas fa-user ms-2"></i>
+                        {{ emp.name }} - {{ emp.national_id }}
+                    </span>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.employee-schedule').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <input type="hidden" name="employee_id" value="{{ emp.id }}">
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label">من الساعة</label>
+                            <input type="time" name="shift_start_{{ emp.id }}" class="form-control" required placeholder="مثلاً: 08:00">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">إلى الساعة</label>
+                            <input type="time" name="shift_end_{{ emp.id }}" class="form-control" required placeholder="مثلاً: 12:00">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">من تاريخ</label>
+                            <input type="date" name="start_date_{{ emp.id }}" class="form-control" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">إلى تاريخ (اختياري)</label>
+                            <input type="date" name="end_date_{{ emp.id }}" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="form-label">أيام العمل</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="days_{{ emp.id }}" value="السبت" id="sat_{{ emp.id }}">
+                                    <label class="form-check-label" for="sat_{{ emp.id }}">السبت</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="days_{{ emp.id }}" value="الأحد" id="sun_{{ emp.id }}">
+                                    <label class="form-check-label" for="sun_{{ emp.id }}">الأحد</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="days_{{ emp.id }}" value="الاثنين" id="mon_{{ emp.id }}">
+                                    <label class="form-check-label" for="mon_{{ emp.id }}">الاثنين</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="days_{{ emp.id }}" value="الثلاثاء" id="tue_{{ emp.id }}">
+                                    <label class="form-check-label" for="tue_{{ emp.id }}">الثلاثاء</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="days_{{ emp.id }}" value="الأربعاء" id="wed_{{ emp.id }}">
+                                    <label class="form-check-label" for="wed_{{ emp.id }}">الأربعاء</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="days_{{ emp.id }}" value="الخميس" id="thu_{{ emp.id }}">
+                                    <label class="form-check-label" for="thu_{{ emp.id }}">الخميس</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="days_{{ emp.id }}" value="الجمعة" id="fri_{{ emp.id }}">
+                                    <label class="form-check-label" for="fri_{{ emp.id }}">الجمعة</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle ms-2"></i>
+                لا يوجد موظفون مسندون إليك
+            </div>
+            {% endif %}
+        </div>
+        
+        {% if subordinates %}
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-islamic btn-lg">
+                <i class="fas fa-save ms-1"></i>
+                حفظ جميع الجداول
+            </button>
+        </div>
+        {% endif %}
+    </form>
+</div>
+
+<script>
+// تعيين تاريخ اليوم كحد أدنى
+document.querySelectorAll('input[type="date"]').forEach(input => {
+    input.min = new Date().toISOString().split('T')[0];
+});
+</script>
+{% endblock %}

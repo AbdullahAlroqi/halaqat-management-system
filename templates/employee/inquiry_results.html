@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}نتائج الاستعلام{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-user-circle ms-2"></i>
+                بيانات: {{ user.name }}
+            </h2>
+        </div>
+    </div>
+    
+    <!-- معلومات الموظف -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card-islamic">
+                <div class="card-header">
+                    <i class="fas fa-info-circle ms-2"></i>
+                    المعلومات الشخصية
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>الاسم:</strong> {{ user.name }}</p>
+                            <p><strong>رقم الهوية:</strong> {{ user.national_id }}</p>
+                            <p><strong>القسم:</strong> {{ user.department or 'غير محدد' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>الجنس:</strong> {{ user.gender }}</p>
+                            <p><strong>الفترة:</strong> {{ user.shift_time or 'غير محدد' }}</p>
+                            {% if user.supervisor %}
+                            <p><strong>المشرف:</strong> {{ user.supervisor.name }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- الجدول -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card-islamic">
+                <div class="card-header">
+                    <i class="fas fa-calendar-alt ms-2"></i>
+                    الجدول الأسبوعي
+                </div>
+                <div class="card-body">
+                    {% if schedules %}
+                    <div class="table-responsive">
+                        <table class="table table-islamic">
+                            <thead>
+                                <tr>
+                                    <th>اليوم</th>
+                                    <th>الفترة</th>
+                                    <th>الحالة</th>
+                                    <th>من تاريخ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for schedule in schedules %}
+                                <tr>
+                                    <td>{{ schedule.day_of_week }}</td>
+                                    <td>{{ schedule.shift_time }}</td>
+                                    <td>
+                                        {% if schedule.is_rest_day %}
+                                        <span class="badge bg-warning">يوم راحة</span>
+                                        {% else %}
+                                        <span class="badge bg-success">يوم عمل</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ schedule.start_date }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle ms-2"></i>
+                        لا يوجد جدول محدد حتى الآن
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- الإجازات -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card-islamic">
+                <div class="card-header">
+                    <i class="fas fa-umbrella-beach ms-2"></i>
+                    الإجازات
+                </div>
+                <div class="card-body">
+                    {% if leaves %}
+                    <div class="table-responsive">
+                        <table class="table table-islamic">
+                            <thead>
+                                <tr>
+                                    <th>نوع الإجازة</th>
+                                    <th>من</th>
+                                    <th>إلى</th>
+                                    <th>الأيام</th>
+                                    <th>الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for leave in leaves %}
+                                <tr>
+                                    <td>{{ leave.leave_type.name }}</td>
+                                    <td>{{ leave.start_date }}</td>
+                                    <td>{{ leave.end_date }}</td>
+                                    <td>{{ leave.days_count }}</td>
+                                    <td>
+                                        {% if leave.status == 'قيد الانتظار' %}
+                                        <span class="badge badge-pending">{{ leave.status }}</span>
+                                        {% elif leave.status == 'مقبول' %}
+                                        <span class="badge badge-approved">{{ leave.status }}</span>
+                                        {% else %}
+                                        <span class="badge badge-rejected">{{ leave.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle ms-2"></i>
+                        لا توجد إجازات مسجلة
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- الحضور والغياب -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card-islamic">
+                <div class="card-header">
+                    <i class="fas fa-check-circle ms-2"></i>
+                    سجل الحضور والغياب (آخر 30 يوم)
+                </div>
+                <div class="card-body">
+                    {% if attendance %}
+                    <div class="table-responsive">
+                        <table class="table table-islamic">
+                            <thead>
+                                <tr>
+                                    <th>التاريخ</th>
+                                    <th>الحالة</th>
+                                    <th>ملاحظات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in attendance %}
+                                <tr>
+                                    <td>{{ record.date }}</td>
+                                    <td>
+                                        {% if record.status == 'حاضر' %}
+                                        <span class="badge bg-success">{{ record.status }}</span>
+                                        {% elif record.status == 'غائب' %}
+                                        <span class="badge bg-danger">{{ record.status }}</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">{{ record.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ record.notes or '-' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle ms-2"></i>
+                        لا توجد سجلات حضور
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="text-center mb-4">
+        <a href="{{ url_for('employee.inquiry') }}" class="btn btn-islamic-outline">
+            <i class="fas fa-arrow-right ms-1"></i>
+            استعلام جديد
+        </a>
+    </div>
+</div>
+{% endblock %}

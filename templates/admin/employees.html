@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة الموظفين{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-users ms-2"></i>
+                إدارة الموظفين
+            </h2>
+        </div>
+    </div>
+    
+    <div class="row mb-3">
+        <div class="col-12 text-end">
+            <a href="{{ url_for('admin.add_employee') }}" class="btn btn-islamic me-2">
+                <i class="fas fa-user-plus ms-1"></i>
+                إضافة موظف
+            </a>
+            <a href="{{ url_for('admin.upload_employees') }}" class="btn btn-islamic-outline">
+                <i class="fas fa-file-excel ms-1"></i>
+                رفع ملف Excel
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card-islamic">
+                <div class="card-body">
+                    {% if employees %}
+                    <div class="mb-3">
+                        <input type="text" id="searchInput" class="form-control" 
+                               placeholder="بحث عن موظف..." 
+                               onkeyup="searchTable('searchInput', 'employeesTable')">
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-islamic" id="employeesTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الاسم</th>
+                                    <th>رقم الهوية</th>
+                                    <th>القسم</th>
+                                    <th>الجنس</th>
+                                    <th>المشرف</th>
+                                    <th>الحالة</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for emp in employees %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ emp.name }}</td>
+                                    <td>{{ emp.national_id }}</td>
+                                    <td>{{ emp.department or '-' }}</td>
+                                    <td>{{ emp.gender }}</td>
+                                    <td>
+                                        {% if emp.supervisor %}
+                                        {{ emp.supervisor.name }}
+                                        {% else %}
+                                        <span class="text-muted">غير مسند</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if emp.is_active %}
+                                        <span class="badge bg-success">نشط</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">غير نشط</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('admin.edit_employee', employee_id=emp.id) }}" 
+                                           class="btn btn-sm btn-islamic-outline">
+                                            <i class="fas fa-edit ms-1"></i>
+                                            تعديل
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">لا يوجد موظفون</h4>
+                        <a href="{{ url_for('admin.add_employee') }}" class="btn btn-islamic mt-3">
+                            <i class="fas fa-plus ms-1"></i>
+                            إضافة موظف جديد
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

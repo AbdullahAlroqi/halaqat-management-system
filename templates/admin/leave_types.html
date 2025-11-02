@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}أنواع الإجازات{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-list ms-2"></i>
+                إدارة أنواع الإجازات
+            </h2>
+        </div>
+    </div>
+    
+    <div class="row mb-3">
+        <div class="col-12 text-end">
+            <button class="btn btn-islamic" data-bs-toggle="modal" data-bs-target="#addLeaveTypeModal">
+                <i class="fas fa-plus ms-1"></i>
+                إضافة نوع إجازة
+            </button>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card-islamic">
+                <div class="card-body">
+                    {% if leave_types %}
+                    <div class="table-responsive">
+                        <table class="table table-islamic">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>اسم الإجازة</th>
+                                    <th>الحد الأقصى (أيام)</th>
+                                    <th>يتطلب مرفق</th>
+                                    <th>الحالة</th>
+                                    <th>تاريخ الإنشاء</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lt in leave_types %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ lt.name }}</td>
+                                    <td>{{ lt.max_days }}</td>
+                                    <td>
+                                        {% if lt.requires_attachment %}
+                                        <span class="badge bg-warning text-dark">نعم</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">لا</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if lt.is_active %}
+                                        <span class="badge bg-success">نشط</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">غير نشط</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ lt.created_at.strftime('%Y-%m-%d') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-list fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">لا توجد أنواع إجازات</h4>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal لإضافة نوع إجازة -->
+<div class="modal fade" id="addLeaveTypeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إضافة نوع إجازة جديد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.add_leave_type') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">اسم الإجازة *</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="max_days" class="form-label">الحد الأقصى (أيام) *</label>
+                        <input type="number" class="form-control" id="max_days" name="max_days" 
+                               min="1" required>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="requires_attachment" 
+                               name="requires_attachment">
+                        <label class="form-check-label" for="requires_attachment">
+                            يتطلب رفع مرفق
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-islamic">
+                        <i class="fas fa-save ms-1"></i>
+                        حفظ
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

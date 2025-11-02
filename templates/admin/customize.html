@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}تخصيص المظهر{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card-islamic">
+                <div class="card-header text-center">
+                    <i class="fas fa-palette fa-2x mb-2"></i>
+                    <h3 class="mb-0">تخصيص المظهر</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" class="form-islamic">
+                        <!-- اسم النظام -->
+                        <div class="mb-4">
+                            <h5><i class="fas fa-heading ms-2"></i> اسم النظام</h5>
+                            <input type="text" class="form-control" name="system_name" 
+                                   value="{{ settings.system_name }}" 
+                                   placeholder="نظام إدارة معلمي الحلقات">
+                        </div>
+                        
+                        <hr>
+                        
+                        <!-- الألوان -->
+                        <div class="mb-4">
+                            <h5><i class="fas fa-palette ms-2"></i> ألوان النظام</h5>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">اللون الأساسي</label>
+                                    <div class="input-group">
+                                        <input type="color" class="form-control form-control-color" 
+                                               name="primary_color" 
+                                               value="{{ settings.primary_color or '#0d7377' }}"
+                                               id="primary_color">
+                                        <input type="text" class="form-control" 
+                                               value="{{ settings.primary_color or '#0d7377' }}"
+                                               id="primary_color_text" readonly>
+                                    </div>
+                                    <small class="text-muted">يستخدم للأزرار والعناوين</small>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">اللون الثانوي</label>
+                                    <div class="input-group">
+                                        <input type="color" class="form-control form-control-color" 
+                                               name="secondary_color" 
+                                               value="{{ settings.secondary_color or '#14FFEC' }}"
+                                               id="secondary_color">
+                                        <input type="text" class="form-control" 
+                                               value="{{ settings.secondary_color or '#14FFEC' }}"
+                                               id="secondary_color_text" readonly>
+                                    </div>
+                                    <small class="text-muted">يستخدم للإبراز والتفاعلات</small>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">لون التمييز</label>
+                                    <div class="input-group">
+                                        <input type="color" class="form-control form-control-color" 
+                                               name="accent_color" 
+                                               value="{{ settings.accent_color or '#323232' }}"
+                                               id="accent_color">
+                                        <input type="text" class="form-control" 
+                                               value="{{ settings.accent_color or '#323232' }}"
+                                               id="accent_color_text" readonly>
+                                    </div>
+                                    <small class="text-muted">يستخدم للنصوص والحدود</small>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info mt-3">
+                                <i class="fas fa-info-circle ms-2"></i>
+                                <strong>معاينة:</strong> يمكنك رؤية تأثير الألوان بعد حفظ التغييرات وإعادة تحميل الصفحة
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <!-- الشعار -->
+                        <div class="mb-4">
+                            <h5><i class="fas fa-image ms-2"></i> شعار النظام</h5>
+                            
+                            {% if settings.logo_path %}
+                            <div class="mb-3 text-center">
+                                <img src="{{ url_for('static', filename='images/' + settings.logo_path) }}" 
+                                     class="img-thumbnail" 
+                                     style="max-width: 300px; max-height: 200px;"
+                                     alt="الشعار الحالي">
+                                <p class="text-muted mt-2">الشعار الحالي</p>
+                            </div>
+                            {% else %}
+                            <div class="text-center mb-3 p-4 bg-light rounded">
+                                <i class="fas fa-image fa-4x text-muted"></i>
+                                <p class="text-muted mt-2">لا يوجد شعار مخصص</p>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="mb-3">
+                                <label class="form-label">تحميل شعار جديد</label>
+                                <input type="file" class="form-control" name="logo" 
+                                       accept="image/*" id="logo_input" onchange="previewLogo(this)">
+                                <small class="text-muted">
+                                    الصيغ المدعومة: PNG, JPG, SVG (الحجم الأقصى: 2MB)
+                                </small>
+                            </div>
+                            
+                            <!-- معاينة الشعار الجديد -->
+                            <div id="logo_preview" class="text-center mt-3" style="display: none;">
+                                <p class="text-muted">معاينة الشعار الجديد:</p>
+                                <img id="preview_image" class="img-thumbnail" 
+                                     style="max-width: 300px; max-height: 200px;">
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <!-- أزرار الحفظ -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-islamic btn-lg">
+                                <i class="fas fa-save ms-1"></i>
+                                حفظ التخصيصات
+                            </button>
+                            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-islamic-outline">
+                                <i class="fas fa-arrow-right ms-1"></i>
+                                العودة للوحة التحكم
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// تحديث النص عند تغيير اللون
+document.getElementById('primary_color').addEventListener('input', function() {
+    document.getElementById('primary_color_text').value = this.value;
+});
+
+document.getElementById('secondary_color').addEventListener('input', function() {
+    document.getElementById('secondary_color_text').value = this.value;
+});
+
+document.getElementById('accent_color').addEventListener('input', function() {
+    document.getElementById('accent_color_text').value = this.value;
+});
+
+// معاينة الشعار
+function previewLogo(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // التحقق من الحجم (2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('حجم الملف كبير جداً! الحد الأقصى 2MB');
+            input.value = '';
+            return;
+        }
+        
+        // التحقق من النوع
+        if (!file.type.match('image.*')) {
+            alert('يرجى اختيار ملف صورة');
+            input.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview_image').src = e.target.result;
+            document.getElementById('logo_preview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}طلبات الإجازات{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-inbox ms-2"></i>
+                طلبات الإجازات
+            </h2>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card-islamic">
+                <div class="card-body">
+                    {% if requests %}
+                    <div class="table-responsive">
+                        <table class="table table-islamic">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الموظف</th>
+                                    <th>نوع الإجازة</th>
+                                    <th>من</th>
+                                    <th>إلى</th>
+                                    <th>الأيام</th>
+                                    <th>السبب</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for req in requests %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ req.employee.name }}</td>
+                                    <td>{{ req.leave_type.name }}</td>
+                                    <td>{{ req.start_date }}</td>
+                                    <td>{{ req.end_date }}</td>
+                                    <td>{{ req.days_count }}</td>
+                                    <td>{{ req.reason or '-' }}</td>
+                                    <td>
+                                        {% if req.status == 'قيد الانتظار' %}
+                                        <span class="badge badge-pending">{{ req.status }}</span>
+                                        {% elif req.status == 'مقبول' %}
+                                        <span class="badge badge-approved">{{ req.status }}</span>
+                                        {% else %}
+                                        <span class="badge badge-rejected">{{ req.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if req.status == 'قيد الانتظار' %}
+                                        <button class="btn btn-sm btn-success" onclick="openReviewModal({{ req.id }})">
+                                            <i class="fas fa-check ms-1"></i>
+                                            مراجعة
+                                        </button>
+                                        {% else %}
+                                        <span class="text-muted">تمت المراجعة</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">لا توجد طلبات إجازة</h4>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals خارج الجدول -->
+{% for req in requests %}
+{% if req.status == 'قيد الانتظار' %}
+<!-- Modal للمراجعة -->
+<div class="modal fade" id="reviewModal{{ req.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">مراجعة طلب الإجازة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('supervisor.review_leave_request', request_id=req.id) }}">
+                <div class="modal-body">
+                    <p><strong>الموظف:</strong> {{ req.employee.name }}</p>
+                    <p><strong>نوع الإجازة:</strong> {{ req.leave_type.name }}</p>
+                    <p><strong>المدة:</strong> من {{ req.start_date }} إلى {{ req.end_date }} ({{ req.days_count }} يوم)</p>
+                    <p><strong>السبب:</strong> {{ req.reason or '-' }}</p>
+                    
+                    {% if req.attachment_path %}
+                    <p><strong>المرفق:</strong> <a href="/{{ req.attachment_path }}" target="_blank">عرض المرفق</a></p>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">ملاحظات (اختياري)</label>
+                        <textarea name="notes" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" name="action" value="approve" class="btn btn-success">
+                        <i class="fas fa-check ms-1"></i>
+                        قبول
+                    </button>
+                    <button type="submit" name="action" value="reject" class="btn btn-danger">
+                        <i class="fas fa-times ms-1"></i>
+                        رفض
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<script>
+function openReviewModal(reqId) {
+    var myModal = new bootstrap.Modal(document.getElementById('reviewModal' + reqId));
+    myModal.show();
+}
+</script>
+
+{% endblock %}

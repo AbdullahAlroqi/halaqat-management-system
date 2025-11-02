@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}تقديم طلب إجازة{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card-islamic">
+                <div class="card-header text-center">
+                    <i class="fas fa-paper-plane fa-2x mb-2"></i>
+                    <h3 class="mb-0">تقديم طلب إجازة</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle ms-2"></i>
+                        لا تحتاج لتسجيل الدخول! فقط أدخل رقم هويتك وبيانات الإجازة
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('employee.leave_request') }}" enctype="multipart/form-data" class="form-islamic">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="national_id" class="form-label">
+                                    <i class="fas fa-id-card ms-1"></i>
+                                    رقم الهوية *
+                                </label>
+                                <input type="text" class="form-control" id="national_id" name="national_id" 
+                                       placeholder="أدخل رقم الهوية (10 أرقام)"
+                                       maxlength="10" pattern="[0-9]{10}" required>
+                                <small class="form-text text-muted">أدخل رقم هويتك للتحقق من بياناتك</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="leave_type_id" class="form-label">
+                                    <i class="fas fa-list ms-1"></i>
+                                    نوع الإجازة *
+                                </label>
+                                <select class="form-select" id="leave_type_id" name="leave_type_id" required onchange="checkAttachment()">
+                                    <option value="">اختر نوع الإجازة</option>
+                                    {% for leave_type in leave_types %}
+                                    <option value="{{ leave_type.id }}" 
+                                            data-requires-attachment="{{ leave_type.requires_attachment }}"
+                                            data-max-days="{{ leave_type.max_days }}">
+                                        {{ leave_type.name }} (الحد الأقصى: {{ leave_type.max_days }} يوم)
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="start_date" class="form-label">
+                                    <i class="fas fa-calendar ms-1"></i>
+                                    من تاريخ *
+                                </label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="end_date" class="form-label">
+                                    <i class="fas fa-calendar-check ms-1"></i>
+                                    إلى تاريخ *
+                                </label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" required>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info mb-3">
+                            <i class="fas fa-info-circle ms-2"></i>
+                            عدد الأيام: <strong id="days_count">-</strong>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">
+                                <i class="fas fa-comment ms-1"></i>
+                                سبب الإجازة
+                            </label>
+                            <textarea class="form-control" id="reason" name="reason" rows="3" placeholder="اكتب سبب الإجازة (اختياري)"></textarea>
+                        </div>
+                        
+                        <div class="mb-3" id="attachment_div" style="display: none;">
+                            <label for="attachment" class="form-label">
+                                <i class="fas fa-paperclip ms-1"></i>
+                                المرفق *
+                            </label>
+                            <input type="file" class="form-control" id="attachment" name="attachment" accept=".pdf,.jpg,.jpeg,.png">
+                            <small class="form-text text-muted">
+                                المرفق مطلوب لهذا النوع من الإجازات (PDF, JPG, PNG)
+                            </small>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle ms-2"></i>
+                            <strong>تنبيه:</strong> سيتم حذف المرفقات تلقائياً بعد 60 يوماً من تاريخ الرفع
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-islamic btn-lg">
+                                <i class="fas fa-paper-plane ms-1"></i>
+                                تقديم الطلب
+                            </button>
+                            <a href="{{ url_for('employee.dashboard') }}" class="btn btn-islamic-outline">
+                                <i class="fas fa-times ms-1"></i>
+                                إلغاء
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function checkAttachment() {
+    const select = document.getElementById('leave_type_id');
+    const selectedOption = select.options[select.selectedIndex];
+    const requiresAttachment = selectedOption.getAttribute('data-requires-attachment') === 'True';
+    const attachmentDiv = document.getElementById('attachment_div');
+    const attachmentInput = document.getElementById('attachment');
+    
+    if (requiresAttachment) {
+        attachmentDiv.style.display = 'block';
+        attachmentInput.required = true;
+    } else {
+        attachmentDiv.style.display = 'none';
+        attachmentInput.required = false;
+    }
+}
+
+// تحديث عدد الأيام
+document.getElementById('start_date').addEventListener('change', updateLeaveDays);
+document.getElementById('end_date').addEventListener('change', updateLeaveDays);
+
+function updateLeaveDays() {
+    const startDate = document.getElementById('start_date').value;
+    const endDate = document.getElementById('end_date').value;
+    
+    if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const timeDiff = end.getTime() - start.getTime();
+        const days = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+        
+        document.getElementById('days_count').textContent = days + ' يوم';
+        
+        // التحقق من الحد الأقصى
+        const select = document.getElementById('leave_type_id');
+        const selectedOption = select.options[select.selectedIndex];
+        const maxDays = parseInt(selectedOption.getAttribute('data-max-days'));
+        
+        if (days > maxDays) {
+            alert(`عدد الأيام (${days}) يتجاوز الحد الأقصى المسموح (${maxDays} يوم)`);
+        }
+    }
+}
+
+// تعيين الحد الأدنى للتاريخ
+document.getElementById('start_date').min = new Date().toISOString().split('T')[0];
+document.getElementById('end_date').min = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %}

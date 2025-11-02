@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}المشرفون الفرعيون{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-users ms-2"></i>
+                المشرفون الفرعيون
+            </h2>
+        </div>
+    </div>
+    
+    <div class="row mb-3">
+        <div class="col-12 text-end">
+            <a href="{{ url_for('supervisor.add_sub_supervisor') }}" class="btn btn-islamic">
+                <i class="fas fa-plus ms-1"></i>
+                إضافة مشرف فرعي
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card-islamic">
+                <div class="card-body">
+                    {% if supervisors %}
+                    <div class="table-responsive">
+                        <table class="table table-islamic">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الاسم</th>
+                                    <th>رقم الهوية</th>
+                                    <th>الجنس</th>
+                                    <th>القسم</th>
+                                    <th>وقت الدوام</th>
+                                    <th>عدد الموظفين</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sup in supervisors %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ sup.name }}</td>
+                                    <td>{{ sup.national_id }}</td>
+                                    <td>{{ sup.gender }}</td>
+                                    <td>{{ sup.department or '-' }}</td>
+                                    <td>{{ sup.shift_time or '-' }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">
+                                            {{ sup.subordinates.count() }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">لا يوجد مشرفون فرعيون</h4>
+                        <a href="{{ url_for('supervisor.add_sub_supervisor') }}" class="btn btn-islamic mt-3">
+                            <i class="fas fa-plus ms-1"></i>
+                            إضافة مشرف فرعي
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

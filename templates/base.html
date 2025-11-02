@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0d7377">
+    <meta name="description" content="نظام إدارة معلمي الحلقات والمقرأة الإلكترونية - مكة المكرمة">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="حلقات مكة">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/logo-192.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    
+    <title>{% block title %}نظام إدارة معلمي الحلقات - مكة المكرمة{% endblock %}</title>
+    
+    <!-- Bootstrap RTL CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts - Arabic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-islamic sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+                {% if system_settings and system_settings.logo_path %}
+                <img src="{{ url_for('static', filename='images/' + system_settings.logo_path) }}" alt="شعار النظام" class="navbar-logo me-2">
+                {% else %}
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="شعار النظام" class="navbar-logo me-2">
+                {% endif %}
+                <span class="brand-text">{{ system_settings.system_name if system_settings else 'حلقات مكة المكرمة' }}</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    {% if current_user.is_authenticated %}
+                        
+                        <!-- قائمة الموظف -->
+                        {% if current_user.role == 'موظف' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('employee.dashboard') }}">
+                                <i class="fas fa-home ms-1"></i> لوحة التحكم
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('employee.my_schedule') }}">
+                                <i class="fas fa-calendar ms-1"></i> جدولي
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('employee.leave_request') }}">
+                                <i class="fas fa-paper-plane ms-1"></i> طلب إجازة
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('employee.my_leaves') }}">
+                                <i class="fas fa-umbrella-beach ms-1"></i> إجازاتي
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('employee.my_attendance') }}">
+                                <i class="fas fa-check-circle ms-1"></i> حضوري
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <!-- قائمة المشرف -->
+                        {% if current_user.role in ['مشرف رئيسي', 'مشرف فرعي'] %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('supervisor.dashboard') }}">
+                                <i class="fas fa-home ms-1"></i> لوحة التحكم
+                            </a>
+                        </li>
+                        {% if current_user.role == 'مشرف رئيسي' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('supervisor.schedules') }}">
+                                <i class="fas fa-calendar-alt ms-1"></i> الجداول
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('supervisor.leave_requests') }}">
+                                <i class="fas fa-inbox ms-1"></i> طلبات الإجازات
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('supervisor.sub_supervisors') }}">
+                                <i class="fas fa-users ms-1"></i> المشرفون الفرعيون
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('supervisor.assign_to_subs') }}">
+                                <i class="fas fa-link ms-1"></i> إسناد المعلمين
+                            </a>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('supervisor.attendance') }}">
+                                <i class="fas fa-user-check ms-1"></i> الحضور والغياب
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <!-- قائمة الإدارة -->
+                        {% if current_user.role in ['مدير النظام الأساسي', 'مدير نظام فرعي'] %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                                <i class="fas fa-home ms-1"></i> لوحة التحكم
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-users ms-1"></i> إدارة المستخدمين
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url_for('admin.employees') }}">الموظفون</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin.supervisors') }}">المشرفون</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin.assign_employees') }}">إسناد الموظفين</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin.leave_types') }}">
+                                <i class="fas fa-list ms-1"></i> أنواع الإجازات
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin.leave_requests') }}">
+                                <i class="fas fa-inbox ms-1"></i> طلبات الإجازات
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin.reports') }}">
+                                <i class="fas fa-chart-bar ms-1"></i> التقارير
+                            </a>
+                        </li>
+                        {% if current_user.role == 'مدير النظام الأساسي' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin.settings') }}">
+                                <i class="fas fa-cog ms-1"></i> الإعدادات
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% endif %}
+                        
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('employee.inquiry') }}">
+                                <i class="fas fa-search ms-1"></i> الاستعلام
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+                
+                <ul class="navbar-nav">
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle ms-1"></i> {{ current_user.name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item disabled">{{ current_user.role }}</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt ms-1"></i> تسجيل الخروج
+                            </a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('login') }}">
+                            <i class="fas fa-sign-in-alt ms-1"></i> تسجيل الدخول
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Flash Messages -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer-islamic mt-5">
+        <div class="container text-center">
+            <div class="islamic-pattern"></div>
+            <p class="mb-2">
+                <i class="fas fa-kaaba ms-1"></i>
+                نظام إدارة معلمي الحلقات والمقرأة الإلكترونية
+            </p>
+            <p class="mb-0 small text-muted">
+                مكة المكرمة - 1446 هـ
+            </p>
+        </div>
+    </footer>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

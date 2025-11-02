@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}إسناد الموظفين{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-link ms-2"></i>
+                إسناد الموظفين للمشرفين
+            </h2>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card-islamic">
+                <div class="card-header">
+                    <i class="fas fa-info-circle ms-2"></i>
+                    تعليمات
+                </div>
+                <div class="card-body">
+                    <p>اختر المشرف ثم حدد الموظفين الذين تريد إسنادهم له</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <form method="POST" action="{{ url_for('admin.assign_employees') }}" class="mt-4">
+        <div class="row">
+            <div class="col-md-12 mb-4">
+                <div class="card-islamic">
+                    <div class="card-header">
+                        <i class="fas fa-user-tie ms-2"></i>
+                        اختر المشرف
+                    </div>
+                    <div class="card-body">
+                        <select name="supervisor_id" class="form-select" required>
+                            <option value="">اختر المشرف</option>
+                            {% for supervisor in supervisors %}
+                            <option value="{{ supervisor.id }}">
+                                {{ supervisor.name }} ({{ supervisor.role }}) - 
+                                {{ supervisor.department or 'بدون قسم' }} - 
+                                {{ supervisor.shift_time or 'بدون فترة' }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12 mb-4">
+                <div class="card-islamic">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="fas fa-users ms-2"></i>
+                            اختر الموظفين
+                        </span>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="selectAll" 
+                                   onclick="toggleAllCheckboxes(this)">
+                            <label class="form-check-label" for="selectAll">
+                                تحديد الكل
+                            </label>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- فورم البحث -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <input type="text" class="form-control" id="search_name" 
+                                       placeholder="🔍 البحث بالاسم" onkeyup="filterEmployees()">
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select" id="search_gender" onchange="filterEmployees()">
+                                    <option value="">الجنس (الكل)</option>
+                                    <option value="ذكر">ذكر</option>
+                                    <option value="أنثى">أنثى</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" class="form-control" id="search_department" 
+                                       placeholder="🔍 القسم" onkeyup="filterEmployees()">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="search_shift" 
+                                       placeholder="🔍 وقت الدوام (مثال: 08:00 أو 8)" onkeyup="filterEmployees()">
+                                <small class="text-muted">ابحث بأي جزء من الوقت</small>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-islamic" onclick="clearFilters()">
+                                    <i class="fas fa-redo"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        {% if employees %}
+                        <div class="row" id="employees-list">
+                            {% for emp in employees %}
+                            <div class="col-md-6 col-lg-4 mb-3 employee-item" 
+                                 data-name="{{ emp.name|lower }}"
+                                 data-gender="{{ emp.gender }}"
+                                 data-department="{{ emp.department|lower or '' }}"
+                                 data-shift="{{ emp.shift_time|lower or '' }}">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" 
+                                           name="employee_ids" value="{{ emp.id }}" 
+                                           id="emp_{{ emp.id }}">
+                                    <label class="form-check-label" for="emp_{{ emp.id }}">
+                                        {{ emp.name }} - {{ emp.department or 'بدون قسم' }}
+                                        <br>
+                                        <small class="text-muted">{{ emp.national_id }}</small>
+                                        {% if emp.supervisor %}
+                                        <br>
+                                        <small class="badge bg-warning text-dark">
+                                            مسند إلى: {{ emp.supervisor.name }}
+                                        </small>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle ms-2"></i>
+                            لا يوجد موظفون متاحون
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if employees %}
+        <div class="text-center">
+            <button type="submit" class="btn btn-islamic btn-lg">
+                <i class="fas fa-save ms-1"></i>
+                حفظ الإسناد
+            </button>
+        </div>
+        {% endif %}
+    </form>
+</div>
+
+<script>
+function filterEmployees() {
+    const name = document.getElementById('search_name').value.toLowerCase();
+    const gender = document.getElementById('search_gender').value;
+    const department = document.getElementById('search_department').value.toLowerCase();
+    const shift = document.getElementById('search_shift').value.toLowerCase();
+    
+    const items = document.querySelectorAll('.employee-item');
+    let visibleCount = 0;
+    
+    items.forEach(item => {
+        const itemName = item.getAttribute('data-name');
+        const itemGender = item.getAttribute('data-gender');
+        const itemDept = item.getAttribute('data-department');
+        const itemShift = item.getAttribute('data-shift');
+        
+        const nameMatch = !name || itemName.includes(name);
+        const genderMatch = !gender || itemGender === gender;
+        const deptMatch = !department || itemDept.includes(department);
+        const shiftMatch = !shift || itemShift.includes(shift);
+        
+        if (nameMatch && genderMatch && deptMatch && shiftMatch) {
+            item.style.display = '';
+            visibleCount++;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    // رسالة إذا لم يتم العثور على نتائج
+    const listContainer = document.getElementById('employees-list');
+    let noResults = document.getElementById('no-results-msg');
+    
+    if (visibleCount === 0) {
+        if (!noResults) {
+            noResults = document.createElement('div');
+            noResults.id = 'no-results-msg';
+            noResults.className = 'col-12 text-center py-5';
+            noResults.innerHTML = '<i class="fas fa-search fa-3x text-muted mb-3"></i><h5 class="text-muted">لا توجد نتائج مطابقة للبحث</h5>';
+            listContainer.appendChild(noResults);
+        }
+    } else {
+        if (noResults) {
+            noResults.remove();
+        }
+    }
+}
+
+function clearFilters() {
+    document.getElementById('search_name').value = '';
+    document.getElementById('search_gender').value = '';
+    document.getElementById('search_department').value = '';
+    document.getElementById('search_shift').value = '';
+    filterEmployees();
+}
+
+function toggleAllCheckboxes(source) {
+    const checkboxes = document.querySelectorAll('input[name="employee_ids"]');
+    checkboxes.forEach(checkbox => {
+        const item = checkbox.closest('.employee-item');
+        if (item && item.style.display !== 'none') {
+            checkbox.checked = source.checked;
+        }
+    });
+}
+</script>
+{% endblock %}

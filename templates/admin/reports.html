@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}التقارير{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-chart-bar ms-2"></i>
+                التقارير
+            </h2>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card-islamic h-100">
+                <div class="card-header">
+                    <i class="fas fa-umbrella-beach ms-2"></i>
+                    تقرير الإجازات
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        عرض تقرير شامل لجميع طلبات الإجازات مع إمكانية الفلترة حسب الفترة والحالة
+                    </p>
+                    <a href="{{ url_for('admin.report_leaves') }}" class="btn btn-islamic w-100">
+                        <i class="fas fa-eye ms-1"></i>
+                        عرض التقرير
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card-islamic h-100">
+                <div class="card-header">
+                    <i class="fas fa-user-check ms-2"></i>
+                    تقرير الحضور والغياب
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        عرض سجل الحضور والغياب لجميع الموظفين مع إمكانية الفلترة
+                    </p>
+                    <a href="{{ url_for('admin.report_attendance') }}" class="btn btn-islamic w-100">
+                        <i class="fas fa-eye ms-1"></i>
+                        عرض التقرير
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card-islamic">
+                <div class="card-header">
+                    <i class="fas fa-info-circle ms-2"></i>
+                    ملاحظات
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>يمكنك طباعة أي تقرير بعد عرضه</li>
+                        <li>استخدم الفلاتر المتاحة للحصول على بيانات دقيقة</li>
+                        <li>جميع التقارير قابلة للتصدير</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

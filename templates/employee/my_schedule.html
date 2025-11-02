@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}جدولي{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-calendar-alt ms-2"></i>
+                جدولي الأسبوعي
+            </h2>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card-islamic">
+                <div class="card-body">
+                    {% if schedules %}
+                    <div class="table-responsive">
+                        <table class="table table-islamic text-center">
+                            <thead>
+                                <tr>
+                                    <th>اليوم</th>
+                                    <th>الفترة</th>
+                                    <th>الحالة</th>
+                                    <th>من تاريخ</th>
+                                    <th>إلى تاريخ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for schedule in schedules %}
+                                <tr>
+                                    <td><strong>{{ schedule.day_of_week }}</strong></td>
+                                    <td>{{ schedule.shift_time }}</td>
+                                    <td>
+                                        {% if schedule.is_rest_day %}
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="fas fa-moon ms-1"></i>
+                                            يوم راحة
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-briefcase ms-1"></i>
+                                            يوم عمل
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ schedule.start_date }}</td>
+                                    <td>{{ schedule.end_date or 'مستمر' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button onclick="printPage()" class="btn btn-islamic-outline">
+                            <i class="fas fa-print ms-1"></i>
+                            طباعة الجدول
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">لا يوجد جدول محدد</h4>
+                        <p class="text-muted">سيقوم المشرف بتحديد جدولك قريباً</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
