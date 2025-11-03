@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة حالات الغياب{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-clipboard-list"></i> إدارة حالات الغياب</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStatusModal">
+            <i class="fas fa-plus"></i> إضافة حالة غياب
+        </button>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>اسم الحالة</th>
+                            <th>اللون</th>
+                            <th>يحتسب كغياب</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for status in statuses %}
+                        <tr>
+                            <td>
+                                <span class="badge" style="background-color: {{ status.color }}">
+                                    {{ status.name }}
+                                </span>
+                            </td>
+                            <td>
+                                <input type="color" value="{{ status.color }}" disabled style="width: 60px;">
+                            </td>
+                            <td>
+                                {% if status.is_counted_as_absent %}
+                                    <span class="badge bg-danger">نعم</span>
+                                {% else %}
+                                    <span class="badge bg-success">لا</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if status.is_active %}
+                                    <span class="badge bg-success">نشط</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">غير نشط</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick='editStatus({{ status.id }}, "{{ status.name }}", "{{ status.color }}", {{ status.is_counted_as_absent|lower }}, {{ status.is_active|lower }})'>
+                                    <i class="fas fa-edit"></i> تعديل
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick='deleteStatus({{ status.id }}, "{{ status.name }}")'>
+                                    <i class="fas fa-trash"></i> حذف
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal إضافة -->
+<div class="modal fade" id="addStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إضافة حالة غياب</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addStatusForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">اسم الحالة <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">اللون <span class="text-danger">*</span></label>
+                        <input type="color" class="form-control" name="color" value="#6c757d" required>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_counted_as_absent" id="add_counted" checked>
+                            <label class="form-check-label" for="add_counted">
+                                يحتسب كغياب
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">إضافة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal تعديل -->
+<div class="modal fade" id="editStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تعديل حالة غياب</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editStatusForm">
+                <input type="hidden" id="edit_status_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">اسم الحالة <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="edit_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">اللون <span class="text-danger">*</span></label>
+                        <input type="color" class="form-control" id="edit_color" name="color" required>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_counted_as_absent" id="edit_counted">
+                            <label class="form-check-label" for="edit_counted">
+                                يحتسب كغياب
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_active" id="edit_active">
+                            <label class="form-check-label" for="edit_active">
+                                نشط
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-success">حفظ التعديلات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('addStatusForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    
+    fetch('{{ url_for("admin.add_absence_status") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'حدث خطأ');
+        }
+    });
+});
+
+document.getElementById('editStatusForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const statusId = document.getElementById('edit_status_id').value;
+    const formData = new FormData(this);
+    
+    fetch(`/admin/absence-statuses/edit/${statusId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'حدث خطأ');
+        }
+    });
+});
+
+function editStatus(id, name, color, isCounted, isActive) {
+    document.getElementById('edit_status_id').value = id;
+    document.getElementById('edit_name').value = name;
+    document.getElementById('edit_color').value = color;
+    document.getElementById('edit_counted').checked = isCounted;
+    document.getElementById('edit_active').checked = isActive;
+    new bootstrap.Modal(document.getElementById('editStatusModal')).show();
+}
+
+function deleteStatus(id, name) {
+    if (confirm(`هل أنت متأكد من حذف حالة الغياب: ${name}؟`)) {
+        fetch(`/admin/absence-statuses/delete/${id}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

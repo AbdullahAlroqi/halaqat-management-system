@@ -26,6 +26,43 @@
         </div>
     </div>
     
+<<<<<<< HEAD
+    <!-- الفلاتر -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">اسم الموظف</label>
+                    <input type="text" name="name" class="form-control" value="{{ request.args.get('name', '') }}" placeholder="ابحث بالاسم">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">الجنس</label>
+                    <select name="gender" class="form-select">
+                        <option value="">الكل</option>
+                        <option value="ذكر" {% if request.args.get('gender') == 'ذكر' %}selected{% endif %}>ذكر</option>
+                        <option value="أنثى" {% if request.args.get('gender') == 'أنثى' %}selected{% endif %}>أنثى</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">القسم</label>
+                    <select name="department" class="form-select">
+                        <option value="">الكل</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept }}" {% if request.args.get('department') == dept %}selected{% endif %}>{{ dept }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> تصفية
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+=======
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
     <div class="row">
         <div class="col-12">
             <div class="card-islamic">
@@ -83,10 +120,22 @@
                                     </td>
                                     <td>
                                         <a href="{{ url_for('admin.edit_employee', employee_id=emp.id) }}" 
+<<<<<<< HEAD
+                                           class="btn btn-sm btn-islamic-outline me-1">
+                                            <i class="fas fa-edit ms-1"></i>
+                                            تعديل
+                                        </a>
+                                        <button onclick='deleteEmployee({{ emp.id }}, "{{ emp.name }}")' 
+                                                class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash ms-1"></i>
+                                            حذف
+                                        </button>
+=======
                                            class="btn btn-sm btn-islamic-outline">
                                             <i class="fas fa-edit ms-1"></i>
                                             تعديل
                                         </a>
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -108,4 +157,28 @@
         </div>
     </div>
 </div>
+<<<<<<< HEAD
+
+<script>
+function deleteEmployee(id, name) {
+    if (confirm(`هل أنت متأكد من حذف الموظف: ${name}؟\n\nسيتم حذف جميع السجلات المرتبطة به.`)) {
+        fetch(`/admin/employees/delete/${id}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الحذف');
+            }
+        })
+        .catch(error => {
+            alert('حدث خطأ: ' + error);
+        });
+    }
+}
+</script>
+=======
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
 {% endblock %}

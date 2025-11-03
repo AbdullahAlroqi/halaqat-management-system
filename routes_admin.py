@@ -1,6 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_file, make_response
 from flask_login import login_required, current_user
+<<<<<<< HEAD
+from models import db, User, Role, LeaveRequest, LeaveType, Schedule, Attendance, SystemSettings, Notification, ActivityLog, AbsenceStatus
+=======
 from models import db, User, Role, LeaveRequest, LeaveType, Schedule, Attendance, SystemSettings, Notification
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
 from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 import openpyxl
@@ -15,9 +19,34 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.enums import TA_RIGHT, TA_CENTER
+<<<<<<< HEAD
+from sqlalchemy import or_, and_
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
+# دالة مساعدة لتسجيل النشاطات
+def log_activity(action, target_type, target_id=None, details=None):
+    """تسجيل نشاط في سجل النشاطات"""
+    try:
+        ip_address = request.remote_addr if request else None
+        log = ActivityLog(
+            user_id=current_user.id,
+            action=action,
+            target_type=target_type,
+            target_id=target_id,
+            details=details,
+            ip_address=ip_address
+        )
+        db.session.add(log)
+        db.session.commit()
+    except Exception as e:
+        print(f"Error logging activity: {str(e)}")
+
+=======
+
+admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
 # التحقق من صلاحيات الإدارة
 def admin_required():
     return current_user.is_authenticated and current_user.role in [Role.MAIN_ADMIN, Role.SUB_ADMIN]
@@ -106,6 +135,12 @@ def add_supervisor():
         db.session.add(supervisor)
         db.session.commit()
         
+<<<<<<< HEAD
+        # تسجيل النشاط
+        log_activity('إضافة', 'مشرف', supervisor.id, f'تم إضافة المشرف: {supervisor.name}')
+        
+=======
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
         flash('تم إضافة المشرف بنجاح', 'success')
         return redirect(url_for('admin.supervisors'))
     
@@ -119,8 +154,34 @@ def employees():
         flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
         return redirect(url_for('index'))
     
+<<<<<<< HEAD
+    # الفلاتر
+    gender_filter = request.args.get('gender', '')
+    department_filter = request.args.get('department', '')
+    name_filter = request.args.get('name', '')
+    
+    query = User.query.filter_by(role=Role.EMPLOYEE)
+    
+    if gender_filter:
+        query = query.filter_by(gender=gender_filter)
+    if department_filter:
+        query = query.filter_by(department=department_filter)
+    if name_filter:
+        query = query.filter(User.name.like(f'%{name_filter}%'))
+    
+    employees_list = query.all()
+    
+    # قوائم الفلاتر
+    departments = db.session.query(User.department).filter_by(role=Role.EMPLOYEE).distinct().all()
+    departments = [d[0] for d in departments if d[0]]
+    
+    return render_template('admin/employees.html', 
+                          employees=employees_list,
+                          departments=departments)
+=======
     employees_list = User.query.filter_by(role=Role.EMPLOYEE).all()
     return render_template('admin/employees.html', employees=employees_list)
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
 
 # إضافة موظف يدوياً
 @admin_bp.route('/employees/add', methods=['GET', 'POST'])
@@ -155,6 +216,12 @@ def add_employee():
         db.session.add(employee)
         db.session.commit()
         
+<<<<<<< HEAD
+        # تسجيل النشاط
+        log_activity('إضافة', 'موظف', employee.id, f'تم إضافة الموظف: {employee.name}')
+        
+=======
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
         flash('تم إضافة الموظف بنجاح', 'success')
         return redirect(url_for('admin.employees'))
     
@@ -186,6 +253,13 @@ def edit_employee(employee_id):
             employee.set_password(password)
         
         db.session.commit()
+<<<<<<< HEAD
+        
+        # تسجيل النشاط
+        log_activity('تعديل', 'موظف', employee.id, f'تم تعديل معلومات الموظف: {employee.name}')
+        
+=======
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
         flash('تم تعديل الموظف بنجاح', 'success')
         return redirect(url_for('admin.employees'))
     
@@ -197,6 +271,113 @@ def edit_employee(employee_id):
                           shift_start=shift_parts[0] if len(shift_parts) > 0 else '',
                           shift_end=shift_parts[1] if len(shift_parts) > 1 else '')
 
+<<<<<<< HEAD
+# حذف موظف
+@admin_bp.route('/employees/delete/<int:employee_id>', methods=['POST'])
+@login_required
+def delete_employee(employee_id):
+    if not admin_required():
+        return jsonify({'success': False, 'message': 'ليس لديك صلاحية لهذه العملية'}), 403
+    
+    employee = User.query.get_or_404(employee_id)
+    
+    if employee.role != Role.EMPLOYEE:
+        return jsonify({'success': False, 'message': 'هذا المستخدم ليس موظفاً'}), 400
+    
+    try:
+        employee_name = employee.name
+        
+        # حذف السجلات المرتبطة
+        Attendance.query.filter_by(employee_id=employee.id).delete()
+        LeaveRequest.query.filter_by(employee_id=employee.id).delete()
+        Schedule.query.filter_by(employee_id=employee.id).delete()
+        Notification.query.filter_by(user_id=employee.id).delete()
+        
+        # حذف الموظف
+        db.session.delete(employee)
+        db.session.commit()
+        
+        # تسجيل النشاط
+        log_activity('حذف', 'موظف', employee_id, f'تم حذف الموظف: {employee_name}')
+        
+        flash(f'تم حذف الموظف {employee_name} بنجاح', 'success')
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'حدث خطأ: {str(e)}'}), 500
+
+# حذف مشرف
+@admin_bp.route('/supervisors/delete/<int:supervisor_id>', methods=['POST'])
+@login_required
+def delete_supervisor(supervisor_id):
+    if not admin_required():
+        return jsonify({'success': False, 'message': 'ليس لديك صلاحية لهذه العملية'}), 403
+    
+    supervisor = User.query.get_or_404(supervisor_id)
+    
+    if supervisor.role not in [Role.MAIN_SUPERVISOR, Role.SUB_SUPERVISOR]:
+        return jsonify({'success': False, 'message': 'هذا المستخدم ليس مشرفاً'}), 400
+    
+    try:
+        supervisor_name = supervisor.name
+        
+        # إلغاء إسناد الموظفين التابعين له
+        subordinates = User.query.filter_by(supervisor_id=supervisor.id).all()
+        for emp in subordinates:
+            emp.supervisor_id = None
+        
+        # حذف السجلات المرتبطة
+        Notification.query.filter_by(user_id=supervisor.id).delete()
+        Schedule.query.filter_by(created_by=supervisor.id).delete()
+        
+        # حذف المشرف
+        db.session.delete(supervisor)
+        db.session.commit()
+        
+        # تسجيل النشاط
+        log_activity('حذف', 'مشرف', supervisor_id, f'تم حذف المشرف: {supervisor_name}')
+        
+        flash(f'تم حذف المشرف {supervisor_name} بنجاح', 'success')
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'حدث خطأ: {str(e)}'}), 500
+
+# تعديل مشرف
+@admin_bp.route('/supervisors/edit/<int:supervisor_id>', methods=['GET', 'POST'])
+@login_required
+def edit_supervisor(supervisor_id):
+    if not admin_required():
+        flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
+        return redirect(url_for('index'))
+    
+    supervisor = User.query.get_or_404(supervisor_id)
+    
+    if request.method == 'POST':
+        supervisor.name = request.form.get('name')
+        supervisor.national_id = request.form.get('national_id')
+        supervisor.gender = request.form.get('gender')
+        supervisor.department = request.form.get('department')
+        supervisor.role = request.form.get('role')
+        
+        password = request.form.get('password')
+        if password:
+            supervisor.set_password(password)
+        
+        db.session.commit()
+        
+        # تسجيل النشاط
+        log_activity('تعديل', 'مشرف', supervisor.id, f'تم تعديل معلومات المشرف: {supervisor.name}')
+        
+        flash('تم تعديل المشرف بنجاح', 'success')
+        return redirect(url_for('admin.supervisors'))
+    
+    return render_template('admin/edit_supervisor.html', supervisor=supervisor)
+
+=======
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
 # رفع ملف Excel للموظفين
 @admin_bp.route('/employees/upload', methods=['GET', 'POST'])
 @login_required
@@ -818,10 +999,46 @@ def schedules_table():
         flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
         return redirect(url_for('index'))
     
+<<<<<<< HEAD
+    # الفلاتر
+    gender_filter = request.args.get('gender', '')
+    department_filter = request.args.get('department', '')
+    period_filter = request.args.get('period', '')
+    name_filter = request.args.get('name', '')
+    
+    # جلب جميع المعلمين (الموظفين) مع معلومات جدولهم
+    query = User.query.filter_by(role=Role.EMPLOYEE, is_active=True)
+    
+    # تطبيق الفلاتر
+    if gender_filter:
+        query = query.filter_by(gender=gender_filter)
+    if department_filter:
+        query = query.filter_by(department=department_filter)
+    if period_filter:
+        query = query.filter_by(period=period_filter)
+    if name_filter:
+        query = query.filter(User.name.like(f'%{name_filter}%'))
+    
+    # ترتيب حسب الفترة والوقت ثم الاسم
+    employees = query.order_by(User.period, User.work_time, User.name).all()
+    
+    # قوائم الفلاتر
+    departments = db.session.query(User.department).filter_by(role=Role.EMPLOYEE).distinct().all()
+    departments = [d[0] for d in departments if d[0]]
+    
+    periods = db.session.query(User.period).filter_by(role=Role.EMPLOYEE).distinct().all()
+    periods = [p[0] for p in periods if p[0]]
+    
+    return render_template('admin/schedules_table.html', 
+                          employees=employees,
+                          departments=departments,
+                          periods=periods)
+=======
     # جلب جميع المعلمين (الموظفين) مع معلومات جدولهم
     employees = User.query.filter_by(role=Role.EMPLOYEE, is_active=True).order_by(User.name).all()
     
     return render_template('admin/schedules_table.html', employees=employees)
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
 
 # حذف جميع بيانات المعلمين
 @admin_bp.route('/delete-all-employees', methods=['POST'])
@@ -924,3 +1141,465 @@ def account_settings():
             return redirect(url_for('admin.account_settings'))
     
     return render_template('admin/account_settings.html')
+<<<<<<< HEAD
+
+# إدارة مديري النظام
+@admin_bp.route('/system-admins')
+@login_required
+def system_admins():
+    if current_user.role != Role.MAIN_ADMIN:
+        flash('هذه الصفحة متاحة فقط لمدير النظام الأساسي', 'danger')
+        return redirect(url_for('admin.dashboard'))
+    
+    admins = User.query.filter(User.role.in_([Role.MAIN_ADMIN, Role.SUB_ADMIN])).all()
+    return render_template('admin/system_admins.html', admins=admins)
+
+# إضافة مدير نظام فرعي
+@admin_bp.route('/system-admins/add', methods=['POST'])
+@login_required
+def add_system_admin():
+    if current_user.role != Role.MAIN_ADMIN:
+        return jsonify({'success': False, 'message': 'ليس لديك صلاحية لهذه العملية'}), 403
+    
+    national_id = request.form.get('national_id')
+    name = request.form.get('name')
+    password = request.form.get('password')
+    gender = request.form.get('gender')
+    
+    # التحقق من عدم وجود الهوية
+    existing = User.query.filter_by(national_id=national_id).first()
+    if existing:
+        return jsonify({'success': False, 'message': 'رقم الهوية موجود مسبقاً'}), 400
+    
+    admin = User(
+        national_id=national_id,
+        name=name,
+        role=Role.SUB_ADMIN,
+        gender=gender
+    )
+    admin.set_password(password)
+    
+    db.session.add(admin)
+    db.session.commit()
+    
+    # تسجيل النشاط
+    log_activity('إضافة', 'مدير نظام', admin.id, f'تم إضافة مدير نظام: {admin.name}')
+    
+    return jsonify({'success': True, 'message': 'تم إضافة مدير النظام بنجاح'})
+
+# تعديل مدير نظام
+@admin_bp.route('/system-admins/edit/<int:admin_id>', methods=['POST'])
+@login_required
+def edit_system_admin(admin_id):
+    if current_user.role != Role.MAIN_ADMIN:
+        return jsonify({'success': False, 'message': 'ليس لديك صلاحية لهذه العملية'}), 403
+    
+    admin = User.query.get_or_404(admin_id)
+    
+    admin.name = request.form.get('name')
+    admin.national_id = request.form.get('national_id')
+    admin.gender = request.form.get('gender')
+    
+    password = request.form.get('password')
+    if password:
+        admin.set_password(password)
+    
+    db.session.commit()
+    
+    # تسجيل النشاط
+    log_activity('تعديل', 'مدير نظام', admin.id, f'تم تعديل معلومات مدير النظام: {admin.name}')
+    
+    return jsonify({'success': True, 'message': 'تم تعديل مدير النظام بنجاح'})
+
+# حذف مدير نظام
+@admin_bp.route('/system-admins/delete/<int:admin_id>', methods=['POST'])
+@login_required
+def delete_system_admin(admin_id):
+    if current_user.role != Role.MAIN_ADMIN:
+        return jsonify({'success': False, 'message': 'ليس لديك صلاحية لهذه العملية'}), 403
+    
+    # التحقق من عدم حذف الحساب الحالي
+    if admin_id == current_user.id:
+        return jsonify({'success': False, 'message': 'لا يمكنك حذف حسابك الخاص'}), 400
+    
+    admin = User.query.get_or_404(admin_id)
+    
+    if admin.role == Role.MAIN_ADMIN:
+        return jsonify({'success': False, 'message': 'لا يمكن حذف مدير النظام الأساسي'}), 400
+    
+    admin_name = admin.name
+    db.session.delete(admin)
+    db.session.commit()
+    
+    # تسجيل النشاط
+    log_activity('حذف', 'مدير نظام', admin_id, f'تم حذف مدير النظام: {admin_name}')
+    
+    return jsonify({'success': True, 'message': f'تم حذف مدير النظام {admin_name} بنجاح'})
+
+# سجل النشاطات (Activity Logs)
+@admin_bp.route('/activity-logs')
+@login_required
+def activity_logs():
+    if not admin_required():
+        flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
+        return redirect(url_for('index'))
+    
+    # الفلاتر
+    action_filter = request.args.get('action')
+    target_type_filter = request.args.get('target_type')
+    user_id_filter = request.args.get('user_id', type=int)
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    
+    query = ActivityLog.query.join(User, ActivityLog.user_id == User.id)
+    
+    if action_filter:
+        query = query.filter(ActivityLog.action == action_filter)
+    if target_type_filter:
+        query = query.filter(ActivityLog.target_type == target_type_filter)
+    if user_id_filter:
+        query = query.filter(ActivityLog.user_id == user_id_filter)
+    if date_from:
+        query = query.filter(ActivityLog.created_at >= datetime.strptime(date_from, '%Y-%m-%d'))
+    if date_to:
+        query = query.filter(ActivityLog.created_at <= datetime.strptime(date_to, '%Y-%m-%d'))
+    
+    logs = query.order_by(ActivityLog.created_at.desc()).paginate(page=request.args.get('page', 1, type=int), per_page=50)
+    
+    # قائمة المستخدمين للفلتر
+    users = User.query.filter(User.role.in_([Role.MAIN_ADMIN, Role.SUB_ADMIN])).all()
+    
+    return render_template('admin/activity_logs.html', logs=logs, users=users)
+
+# إدارة حالات الغياب
+@admin_bp.route('/absence-statuses')
+@login_required
+def absence_statuses():
+    if not admin_required():
+        flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
+        return redirect(url_for('index'))
+    
+    statuses = AbsenceStatus.query.all()
+    return render_template('admin/absence_statuses.html', statuses=statuses)
+
+# إضافة حالة غياب
+@admin_bp.route('/absence-statuses/add', methods=['POST'])
+@login_required
+def add_absence_status():
+    if not admin_required():
+        return jsonify({'success': False}), 403
+    
+    name = request.form.get('name')
+    color = request.form.get('color')
+    is_counted_as_absent = request.form.get('is_counted_as_absent') == 'on'
+    
+    # التحقق من عدم التكرار
+    existing = AbsenceStatus.query.filter_by(name=name).first()
+    if existing:
+        return jsonify({'success': False, 'message': 'هذه الحالة موجودة مسبقاً'}), 400
+    
+    status = AbsenceStatus(
+        name=name,
+        color=color,
+        is_counted_as_absent=is_counted_as_absent
+    )
+    
+    db.session.add(status)
+    db.session.commit()
+    
+    # تسجيل النشاط
+    log_activity('إضافة', 'حالة غياب', status.id, f'تم إضافة حالة غياب: {status.name}')
+    
+    return jsonify({'success': True})
+
+# تعديل حالة غياب
+@admin_bp.route('/absence-statuses/edit/<int:status_id>', methods=['POST'])
+@login_required
+def edit_absence_status(status_id):
+    if not admin_required():
+        return jsonify({'success': False}), 403
+    
+    status = AbsenceStatus.query.get_or_404(status_id)
+    
+    status.name = request.form.get('name')
+    status.color = request.form.get('color')
+    status.is_counted_as_absent = request.form.get('is_counted_as_absent') == 'on'
+    status.is_active = request.form.get('is_active') == 'on'
+    
+    db.session.commit()
+    
+    # تسجيل النشاط
+    log_activity('تعديل', 'حالة غياب', status.id, f'تم تعديل حالة الغياب: {status.name}')
+    
+    return jsonify({'success': True})
+
+# حذف حالة غياب
+@admin_bp.route('/absence-statuses/delete/<int:status_id>', methods=['POST'])
+@login_required
+def delete_absence_status(status_id):
+    if not admin_required():
+        return jsonify({'success': False}), 403
+    
+    status = AbsenceStatus.query.get_or_404(status_id)
+    
+    # التحقق من عدم وجود سجلات مرتبطة
+    if status.attendance_records.count() > 0:
+        return jsonify({'success': False, 'message': 'لا يمكن حذف هذه الحالة لأنها مرتبطة بسجلات حضور'}), 400
+    
+    status_name = status.name
+    db.session.delete(status)
+    db.session.commit()
+    
+    # تسجيل النشاط
+    log_activity('حذف', 'حالة غياب', status_id, f'تم حذف حالة الغياب: {status_name}')
+    
+    return jsonify({'success': True})
+
+# صفحة التحضير (الحضور والغياب)
+@admin_bp.route('/attendance-management')
+@login_required
+def attendance_management():
+    if not admin_required():
+        flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
+        return redirect(url_for('index'))
+    
+    # الفلاتر
+    date_filter = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
+    name_filter = request.args.get('name', '')
+    gender_filter = request.args.get('gender', '')
+    department_filter = request.args.get('department', '')
+    period_filter = request.args.get('period', '')
+    
+    # بناء الاستعلام
+    query = User.query.filter_by(role=Role.EMPLOYEE, is_active=True)
+    
+    if name_filter:
+        query = query.filter(User.name.like(f'%{name_filter}%'))
+    if gender_filter:
+        query = query.filter_by(gender=gender_filter)
+    if department_filter:
+        query = query.filter_by(department=department_filter)
+    if period_filter:
+        query = query.filter_by(period=period_filter)
+    
+    employees = query.order_by(User.name).all()
+    
+    # جلب سجلات الحضور لهذا اليوم
+    date_obj = datetime.strptime(date_filter, '%Y-%m-%d').date()
+    attendance_records = {}
+    for emp in employees:
+        record = Attendance.query.filter_by(employee_id=emp.id, date=date_obj).first()
+        attendance_records[emp.id] = record
+    
+    # جلب حالات الغياب
+    absence_statuses = AbsenceStatus.query.filter_by(is_active=True).all()
+    
+    # قوائم الفلاتر
+    departments = db.session.query(User.department).filter_by(role=Role.EMPLOYEE).distinct().all()
+    departments = [d[0] for d in departments if d[0]]
+    
+    periods = db.session.query(User.period).filter_by(role=Role.EMPLOYEE).distinct().all()
+    periods = [p[0] for p in periods if p[0]]
+    
+    return render_template('admin/attendance_management.html',
+                         employees=employees,
+                         attendance_records=attendance_records,
+                         absence_statuses=absence_statuses,
+                         date_filter=date_filter,
+                         departments=departments,
+                         periods=periods)
+
+# تسجيل الحضور/الغياب
+@admin_bp.route('/mark-attendance', methods=['POST'])
+@login_required
+def mark_attendance():
+    if not admin_required():
+        return jsonify({'success': False}), 403
+    
+    data = request.get_json()
+    employee_id = data.get('employee_id')
+    date_str = data.get('date')
+    status = data.get('status')
+    absence_status_id = data.get('absence_status_id')
+    notes = data.get('notes', '')
+    
+    date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+    
+    # البحث عن سجل موجود
+    record = Attendance.query.filter_by(employee_id=employee_id, date=date_obj).first()
+    
+    if record:
+        # تحديث السجل
+        record.status = status
+        record.absence_status_id = absence_status_id
+        record.notes = notes
+        record.recorded_by = current_user.id
+    else:
+        # إنشاء سجل جديد
+        record = Attendance(
+            employee_id=employee_id,
+            date=date_obj,
+            status=status,
+            absence_status_id=absence_status_id,
+            notes=notes,
+            recorded_by=current_user.id
+        )
+        db.session.add(record)
+    
+    db.session.commit()
+    
+    # تسجيل النشاط
+    employee = User.query.get(employee_id)
+    log_activity('تحديث حضور', 'موظف', employee_id, f'تم تحديث حضور {employee.name} بتاريخ {date_str}: {status}')
+    
+    return jsonify({'success': True})
+
+# تعديل جدول موظف
+@admin_bp.route('/employees/<int:employee_id>/edit-schedule', methods=['GET', 'POST'])
+@login_required
+def edit_employee_schedule(employee_id):
+    if not admin_required():
+        flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
+        return redirect(url_for('index'))
+    
+    employee = User.query.get_or_404(employee_id)
+    
+    if request.method == 'POST':
+        employee.period = request.form.get('period')
+        employee.work_time = request.form.get('work_time')
+        employee.rest_days = request.form.get('rest_days')
+        
+        db.session.commit()
+        
+        # تسجيل النشاط
+        log_activity('تعديل جدول', 'موظف', employee.id, f'تم تعديل جدول الموظف: {employee.name}')
+        
+        flash('تم تعديل جدول الموظف بنجاح', 'success')
+        return redirect(url_for('admin.schedules_table'))
+    
+    return render_template('admin/edit_employee_schedule.html', employee=employee)
+
+# تقرير PDF للجدول
+@admin_bp.route('/schedules-table/pdf')
+@login_required
+def schedules_table_pdf():
+    if not admin_required():
+        flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
+        return redirect(url_for('index'))
+    
+    # الفلاتر
+    gender_filter = request.args.get('gender', '')
+    department_filter = request.args.get('department', '')
+    period_filter = request.args.get('period', '')
+    
+    query = User.query.filter_by(role=Role.EMPLOYEE, is_active=True)
+    
+    if gender_filter:
+        query = query.filter_by(gender=gender_filter)
+    if department_filter:
+        query = query.filter_by(department=department_filter)
+    if period_filter:
+        query = query.filter_by(period=period_filter)
+    
+    # ترتيب حسب الفترة والوقت
+    employees = query.order_by(User.period, User.work_time, User.name).all()
+    
+    # إنشاء PDF مع دعم العربية
+    from reportlab.pdfbase.pdfmetrics import registerFont
+    from reportlab.pdfbase.ttfonts import TTFont
+    from arabic_reshaper import reshape
+    from bidi.algorithm import get_display
+    
+    # تسجيل خط عربي
+    try:
+        registerFont(TTFont('Arabic', 'C:/Windows/Fonts/arial.ttf'))
+        arabic_font = 'Arabic'
+    except:
+        try:
+            registerFont(TTFont('Arabic', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'))
+            arabic_font = 'Arabic'
+        except:
+            arabic_font = 'Helvetica'
+    
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=1.5*cm, leftMargin=1.5*cm, topMargin=2*cm, bottomMargin=2*cm)
+    
+    elements = []
+    
+    # العنوان
+    title_text = 'جدول معلمي الحلقات'
+    reshaped_title = reshape(title_text)
+    bidi_title = get_display(reshaped_title)
+    
+    title_style = ParagraphStyle(
+        'TitleStyle',
+        fontSize=20,
+        alignment=TA_CENTER,
+        spaceAfter=30,
+        fontName=arabic_font
+    )
+    elements.append(Paragraph(bidi_title, title_style))
+    
+    # دالة لتحويل النص العربي
+    def arabic_text(text):
+        if not text:
+            return '-'
+        reshaped = reshape(str(text))
+        return get_display(reshaped)
+    
+    # بيانات الجدول
+    headers = ['م', 'الاسم', 'الفترة', 'الوقت', 'أيام الراحة', 'القسم', 'الجنس']
+    data = [[arabic_text(h) for h in headers]]
+    
+    for idx, emp in enumerate(employees, 1):
+        data.append([
+            str(idx),
+            arabic_text(emp.name),
+            arabic_text(emp.period),
+            arabic_text(emp.work_time),
+            arabic_text(emp.rest_days),
+            arabic_text(emp.department),
+            arabic_text(emp.gender)
+        ])
+    
+    # إنشاء الجدول
+    table = Table(data, colWidths=[1.5*cm, 5*cm, 3*cm, 3*cm, 4*cm, 3*cm, 2.5*cm])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d7377')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, -1), arabic_font),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('TOPPADDING', (0, 1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+    
+    elements.append(table)
+    
+    # التذييل
+    footer_text = f'تاريخ الطباعة: {datetime.now().strftime("%Y-%m-%d %H:%M")}'
+    footer_style = ParagraphStyle(
+        'FooterStyle',
+        fontSize=10,
+        alignment=TA_CENTER,
+        spaceAfter=10,
+        fontName=arabic_font
+    )
+    elements.append(Spacer(1, 20))
+    elements.append(Paragraph(arabic_text(footer_text), footer_style))
+    
+    doc.build(elements)
+    
+    buffer.seek(0)
+    
+    # تسجيل النشاط
+    log_activity('طباعة تقرير', 'جدول', None, f'تم طباعة تقرير جدول المعلمين')
+    
+    return send_file(buffer, as_attachment=True, download_name=f'schedule_table_{datetime.now().strftime("%Y%m%d")}.pdf', mimetype='application/pdf')
+=======
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf

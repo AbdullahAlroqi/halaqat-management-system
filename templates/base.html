@@ -156,6 +156,33 @@
                             </a>
                         </li>
                         <li class="nav-item">
+<<<<<<< HEAD
+                            <a class="nav-link" href="{{ url_for('admin.attendance_management') }}">
+                                <i class="fas fa-clipboard-check ms-1"></i> التحضير
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-cogs ms-1"></i> الإعدادات المتقدمة
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url_for('admin.absence_statuses') }}">
+                                    <i class="fas fa-clipboard-list ms-1"></i> حالات الغياب
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin.activity_logs') }}">
+                                    <i class="fas fa-history ms-1"></i> سجل النشاطات
+                                </a></li>
+                                {% if current_user.role == 'مدير النظام الأساسي' %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin.system_admins') }}">
+                                    <i class="fas fa-user-shield ms-1"></i> مديرو النظام
+                                </a></li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+=======
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
                             <a class="nav-link" href="{{ url_for('admin.leave_requests') }}">
                                 <i class="fas fa-inbox ms-1"></i> طلبات الإجازات
                             </a>

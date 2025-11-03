@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}تعديل جدول موظف{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-calendar-alt"></i> تعديل جدول: {{ employee.name }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">الاسم</label>
+                            <input type="text" class="form-control" value="{{ employee.name }}" disabled>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">رقم الهوية</label>
+                            <input type="text" class="form-control" value="{{ employee.national_id }}" disabled>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">الفترة <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="period" value="{{ employee.period or '' }}" 
+                                   placeholder="مثال: الفترة الأولى" required>
+                            <small class="text-muted">مثل: الفترة الأولى، الفترة الثانية، الفترة الثالثة</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">الوقت <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="work_time" value="{{ employee.work_time or '' }}" 
+                                   placeholder="مثال: 4م-8م" required>
+                            <small class="text-muted">مثل: 4م-8م، 10ص-2م، 8ص-12م</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">أيام الراحة <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="rest_days" value="{{ employee.rest_days or '' }}" 
+                                   placeholder="مثال: الاثنين والثلاثاء" required>
+                            <small class="text-muted">مثل: الاثنين والثلاثاء، الجمعة والسبت</small>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('admin.schedules_table') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-right"></i> رجوع
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> حفظ التعديلات
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

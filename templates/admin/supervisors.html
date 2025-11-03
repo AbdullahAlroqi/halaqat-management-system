@@ -39,6 +39,10 @@
                                     <th>الفترة</th>
                                     <th>الموظفون التابعون</th>
                                     <th>الحالة</th>
+<<<<<<< HEAD
+                                    <th>الإجراءات</th>
+=======
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
                                 </tr>
                             </thead>
                             <tbody>
@@ -66,6 +70,19 @@
                                         <span class="badge bg-danger">غير نشط</span>
                                         {% endif %}
                                     </td>
+<<<<<<< HEAD
+                                    <td>
+                                        <a href="{{ url_for('admin.edit_supervisor', supervisor_id=supervisor.id) }}" 
+                                           class="btn btn-sm btn-warning me-1">
+                                            <i class="fas fa-edit"></i> تعديل
+                                        </a>
+                                        <button onclick='deleteSupervisor({{ supervisor.id }}, "{{ supervisor.name }}")' 
+                                                class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i> حذف
+                                        </button>
+                                    </td>
+=======
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -86,4 +103,28 @@
         </div>
     </div>
 </div>
+<<<<<<< HEAD
+
+<script>
+function deleteSupervisor(id, name) {
+    if (confirm(`هل أنت متأكد من حذف المشرف: ${name}؟\n\nسيتم إلغاء إسناد الموظفين التابعين له.`)) {
+        fetch(`/admin/supervisors/delete/${id}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الحذف');
+            }
+        })
+        .catch(error => {
+            alert('حدث خطأ: ' + error);
+        });
+    }
+}
+</script>
+=======
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
 {% endblock %}

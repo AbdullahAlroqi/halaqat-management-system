@@ -25,6 +25,16 @@
                         <i class="fas fa-download ms-1"></i>
                         تحميل نموذج Excel
                     </a>
+<<<<<<< HEAD
+                    {% if employees|length > 0 %}
+                    <a href="{{ url_for('admin.schedules_table_pdf', gender=request.args.get('gender', ''), department=request.args.get('department', ''), period=request.args.get('period', '')) }}" 
+                       class="btn btn-success" target="_blank">
+                        <i class="fas fa-file-pdf ms-1"></i>
+                        تصدير PDF
+                    </a>
+                    {% endif %}
+=======
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
                     {% if current_user.role == 'مدير النظام الأساسي' and employees|length > 0 %}
                     <form method="POST" action="{{ url_for('admin.delete_all_employees') }}" 
                           onsubmit="return confirm('⚠️ هل أنت متأكد من حذف جميع بيانات المعلمين؟\n\nسيتم حذف:\n• جميع المعلمين ({{ employees|length }} معلم)\n• جميع جداولهم\n• جميع سجلات الحضور والإجازات\n\nهذه العملية لا يمكن التراجع عنها!');" 
@@ -43,6 +53,52 @@
         </div>
     </div>
     
+<<<<<<< HEAD
+    <!-- الفلاتر -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">الاسم</label>
+                    <input type="text" name="name" class="form-control" value="{{ request.args.get('name', '') }}" placeholder="ابحث بالاسم">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">الجنس</label>
+                    <select name="gender" class="form-select">
+                        <option value="">الكل</option>
+                        <option value="ذكر" {% if request.args.get('gender') == 'ذكر' %}selected{% endif %}>ذكر</option>
+                        <option value="أنثى" {% if request.args.get('gender') == 'أنثى' %}selected{% endif %}>أنثى</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">القسم</label>
+                    <select name="department" class="form-select">
+                        <option value="">الكل</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept }}" {% if request.args.get('department') == dept %}selected{% endif %}>{{ dept }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">الفترة</label>
+                    <select name="period" class="form-select">
+                        <option value="">الكل</option>
+                        {% for period in periods %}
+                        <option value="{{ period }}" {% if request.args.get('period') == period %}selected{% endif %}>{{ period }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> تصفية
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+=======
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
     <div class="row">
         <div class="col-12">
             {% if employees %}
@@ -57,9 +113,16 @@
                                     <th style="width: 12%;">الهوية</th>
                                     <th style="width: 10%;">الفترة</th>
                                     <th style="width: 12%;">الوقت</th>
+<<<<<<< HEAD
+                                    <th style="width: 15%;">الراحة</th>
+                                    <th style="width: 10%;">القسم</th>
+                                    <th style="width: 8%;">الجنس</th>
+                                    <th style="width: 10%;">إجراءات</th>
+=======
                                     <th style="width: 18%;">الراحة</th>
                                     <th style="width: 13%;">القسم</th>
                                     <th style="width: 10%;">الجنس</th>
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
                                 </tr>
                             </thead>
                             <tbody>
@@ -110,6 +173,15 @@
                                         <span class="badge bg-info">أنثى</span>
                                         {% endif %}
                                     </td>
+<<<<<<< HEAD
+                                    <td>
+                                        <a href="{{ url_for('admin.edit_employee_schedule', employee_id=employee.id) }}" 
+                                           class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit"></i> تعديل
+                                        </a>
+                                    </td>
+=======
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
                                 </tr>
                                 {% endfor %}
                             </tbody>

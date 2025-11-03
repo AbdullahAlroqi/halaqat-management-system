@@ -2,7 +2,11 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from config import Config
+<<<<<<< HEAD
+from models import db, User, Role, LeaveRequest, LeaveType, Schedule, Attendance, SystemSettings, Notification, ActivityLog, AbsenceStatus
+=======
 from models import db, User, Role, LeaveRequest, LeaveType, Schedule, Attendance, SystemSettings, Notification
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
 from routes_employee import employee_bp
 from routes_supervisor import supervisor_bp
 from routes_admin import admin_bp
@@ -77,6 +81,22 @@ def init_database():
             settings = SystemSettings()
             db.session.add(settings)
         
+<<<<<<< HEAD
+        # إنشاء حالات الغياب الافتراضية
+        if AbsenceStatus.query.count() == 0:
+            default_statuses = [
+                {'name': 'حاضر', 'color': '#28a745', 'is_counted_as_absent': False},
+                {'name': 'غائب بعذر', 'color': '#ffc107', 'is_counted_as_absent': True},
+                {'name': 'غائب بدون عذر', 'color': '#dc3545', 'is_counted_as_absent': True},
+                {'name': 'إجازة', 'color': '#17a2b8', 'is_counted_as_absent': False},
+                {'name': 'إجازة مرضية', 'color': '#6c757d', 'is_counted_as_absent': False},
+            ]
+            for status_data in default_statuses:
+                status = AbsenceStatus(**status_data)
+                db.session.add(status)
+        
+=======
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
         db.session.commit()
         print('تم تهيئة قاعدة البيانات بنجاح')
 

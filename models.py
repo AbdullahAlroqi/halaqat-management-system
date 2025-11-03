@@ -2,9 +2,23 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+<<<<<<< HEAD
+import pytz
 
 db = SQLAlchemy()
 
+# التوقيت السعودي
+SAUDI_TZ = pytz.timezone('Asia/Riyadh')
+
+def get_saudi_time():
+    """الحصول على الوقت الحالي بتوقيت السعودية"""
+    return datetime.now(SAUDI_TZ)
+
+=======
+
+db = SQLAlchemy()
+
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
 # جدول الأدوار
 class Role:
     EMPLOYEE = 'موظف'
@@ -136,11 +150,19 @@ class Attendance(db.Model):
     employee_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(20), nullable=False)  # حاضر / غائب / إجازة
+<<<<<<< HEAD
+    absence_status_id = db.Column(db.Integer, db.ForeignKey('absence_statuses.id'))  # الربط بحالة الغياب
+=======
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
     notes = db.Column(db.Text)
     recorded_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     recorder = db.relationship('User', foreign_keys=[recorded_by])
+<<<<<<< HEAD
+    absence_status = db.relationship('AbsenceStatus', backref='attendance_records')
+=======
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
     
     __table_args__ = (db.UniqueConstraint('employee_id', 'date', name='_employee_date_uc'),)
     
@@ -180,3 +202,38 @@ class Notification(db.Model):
     
     def __repr__(self):
         return f'<Notification {self.title}>'
+<<<<<<< HEAD
+
+# نموذج سجل النشاطات (Activity Logs)
+class ActivityLog(db.Model):
+    __tablename__ = 'activity_logs'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    action = db.Column(db.String(100), nullable=False)  # نوع العملية: إضافة، تعديل، حذف
+    target_type = db.Column(db.String(50), nullable=False)  # نوع الهدف: موظف، مشرف، إجازة، إلخ
+    target_id = db.Column(db.Integer)  # معرف الهدف
+    details = db.Column(db.Text)  # تفاصيل العملية
+    ip_address = db.Column(db.String(50))  # عنوان IP
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    user = db.relationship('User', backref='activity_logs')
+    
+    def __repr__(self):
+        return f'<ActivityLog {self.action} - {self.target_type}>'
+
+# نموذج حالات الغياب
+class AbsenceStatus(db.Model):
+    __tablename__ = 'absence_statuses'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)  # اسم الحالة: حاضر، غائب بعذر، غائب بدون عذر، إجازة، إلخ
+    color = db.Column(db.String(20), default='#6c757d')  # اللون المميز للحالة
+    is_counted_as_absent = db.Column(db.Boolean, default=True)  # هل يحتسب كغياب
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<AbsenceStatus {self.name}>'
+=======
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf

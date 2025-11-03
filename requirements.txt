@@ -9,3 +9,7 @@ Pillow==10.1.0
 reportlab==4.0.7
 arabic-reshaper==3.0.0
 python-bidi==0.4.2
+<<<<<<< HEAD
+pytz==2023.3
+=======
+>>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
