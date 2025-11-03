@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة مديري النظام{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-users-cog"></i> إدارة مديري النظام</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAdminModal">
+            <i class="fas fa-plus"></i> إضافة مدير نظام
+        </button>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>الاسم</th>
+                            <th>رقم الهوية</th>
+                            <th>الدور</th>
+                            <th>الجنس</th>
+                            <th>تاريخ الإنشاء</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for admin in admins %}
+                        <tr>
+                            <td>{{ admin.name }}</td>
+                            <td>{{ admin.national_id }}</td>
+                            <td>
+                                {% if admin.role == 'مدير النظام الأساسي' %}
+                                    <span class="badge bg-danger">{{ admin.role }}</span>
+                                {% else %}
+                                    <span class="badge bg-info">{{ admin.role }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ admin.gender }}</td>
+                            <td>{{ admin.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                {% if admin.role != 'مدير النظام الأساسي' %}
+                                <button class="btn btn-sm btn-warning" onclick='editAdmin({{ admin.id }}, "{{ admin.name }}", "{{ admin.national_id }}", "{{ admin.gender }}")'>
+                                    <i class="fas fa-edit"></i> تعديل
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick='deleteAdmin({{ admin.id }}, "{{ admin.name }}")'>
+                                    <i class="fas fa-trash"></i> حذف
+                                </button>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal إضافة مدير -->
+<div class="modal fade" id="addAdminModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إضافة مدير نظام فرعي</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addAdminForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">رقم الهوية <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="national_id" required maxlength="10" pattern="\d{10}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الاسم <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الجنس <span class="text-danger">*</span></label>
+                        <select class="form-select" name="gender" required>
+                            <option value="ذكر">ذكر</option>
+                            <option value="أنثى">أنثى</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">كلمة المرور <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" name="password" required minlength="6">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">إضافة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal تعديل مدير -->
+<div class="modal fade" id="editAdminModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تعديل مدير نظام</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editAdminForm">
+                <input type="hidden" id="edit_admin_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">رقم الهوية <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="edit_national_id" name="national_id" required maxlength="10" pattern="\d{10}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الاسم <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="edit_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الجنس <span class="text-danger">*</span></label>
+                        <select class="form-select" id="edit_gender" name="gender" required>
+                            <option value="ذكر">ذكر</option>
+                            <option value="أنثى">أنثى</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">كلمة المرور الجديدة</label>
+                        <input type="password" class="form-control" name="password" minlength="6">
+                        <small class="text-muted">اتركه فارغاً إذا كنت لا تريد تغييرها</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-success">حفظ التعديلات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('addAdminForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    
+    fetch('{{ url_for("admin.add_system_admin") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'حدث خطأ');
+        }
+    });
+});
+
+document.getElementById('editAdminForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const adminId = document.getElementById('edit_admin_id').value;
+    const formData = new FormData(this);
+    
+    fetch(`/admin/system-admins/edit/${adminId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'حدث خطأ');
+        }
+    });
+});
+
+function editAdmin(id, name, nationalId, gender) {
+    document.getElementById('edit_admin_id').value = id;
+    document.getElementById('edit_name').value = name;
+    document.getElementById('edit_national_id').value = nationalId;
+    document.getElementById('edit_gender').value = gender;
+    new bootstrap.Modal(document.getElementById('editAdminModal')).show();
+}
+
+function deleteAdmin(id, name) {
+    if (confirm(`هل أنت متأكد من حذف مدير النظام: ${name}؟`)) {
+        fetch(`/admin/system-admins/delete/${id}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

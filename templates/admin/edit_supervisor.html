@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}تعديل مشرف{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-edit"></i> تعديل مشرف</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.edit_supervisor', supervisor_id=supervisor.id) }}">
+                        <div class="mb-3">
+                            <label class="form-label">رقم الهوية <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="national_id" value="{{ supervisor.national_id }}" required maxlength="10" pattern="\d{10}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">الاسم <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="name" value="{{ supervisor.name }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">الدور <span class="text-danger">*</span></label>
+                            <select class="form-select" name="role" required>
+                                <option value="مشرف رئيسي" {% if supervisor.role == 'مشرف رئيسي' %}selected{% endif %}>مشرف رئيسي</option>
+                                <option value="مشرف فرعي" {% if supervisor.role == 'مشرف فرعي' %}selected{% endif %}>مشرف فرعي</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">الجنس <span class="text-danger">*</span></label>
+                            <select class="form-select" name="gender" required>
+                                <option value="ذكر" {% if supervisor.gender == 'ذكر' %}selected{% endif %}>ذكر</option>
+                                <option value="أنثى" {% if supervisor.gender == 'أنثى' %}selected{% endif %}>أنثى</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">القسم</label>
+                            <input type="text" class="form-control" name="department" value="{{ supervisor.department or '' }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">كلمة المرور الجديدة</label>
+                            <input type="password" class="form-control" name="password" minlength="6">
+                            <small class="form-text text-muted">اترك الحقل فارغاً إذا كنت لا تريد تغيير كلمة المرور</small>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('admin.supervisors') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-right"></i> رجوع
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> حفظ التعديلات
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

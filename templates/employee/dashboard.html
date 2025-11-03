@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}لوحة تحكم الموظف{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-home ms-2"></i>
+                مرحباً {{ current_user.name }}
+            </h2>
+        </div>
+    </div>
+    
+    <!-- الإحصائيات -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <i class="fas fa-umbrella-beach"></i>
+                <h3>{{ total_leaves }}</h3>
+                <p>إجمالي الإجازات</p>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <i class="fas fa-clock"></i>
+                <h3>{{ pending_leaves }}</h3>
+                <p>طلبات قيد الانتظار</p>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <i class="fas fa-check-circle"></i>
+                <h3>{{ attendance_count }}</h3>
+                <p>أيام الحضور هذا الشهر</p>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <i class="fas fa-times-circle"></i>
+                <h3>{{ absence_count }}</h3>
+                <p>أيام الغياب هذا الشهر</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- الإجراءات السريعة -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card-islamic h-100">
+                <div class="card-header">
+                    <i class="fas fa-bolt ms-2"></i>
+                    إجراءات سريعة
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-3">
+                        <a href="{{ url_for('employee.leave_request') }}" class="btn btn-islamic">
+                            <i class="fas fa-paper-plane ms-1"></i>
+                            تقديم طلب إجازة جديد
+                        </a>
+                        <a href="{{ url_for('employee.my_schedule') }}" class="btn btn-islamic-outline">
+                            <i class="fas fa-calendar-alt ms-1"></i>
+                            عرض جدولي
+                        </a>
+                        <a href="{{ url_for('employee.my_attendance') }}" class="btn btn-islamic-outline">
+                            <i class="fas fa-user-check ms-1"></i>
+                            سجل الحضور والغياب
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card-islamic h-100">
+                <div class="card-header">
+                    <i class="fas fa-info-circle ms-2"></i>
+                    معلومات الحساب
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tbody>
+                            <tr>
+                                <td><strong>الاسم:</strong></td>
+                                <td>{{ current_user.name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>رقم الهوية:</strong></td>
+                                <td>{{ current_user.national_id }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>القسم:</strong></td>
+                                <td>{{ current_user.department or 'غير محدد' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>الجنس:</strong></td>
+                                <td>{{ current_user.gender }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>الفترة:</strong></td>
+                                <td>{{ current_user.period or 'غير محدد' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>الوقت:</strong></td>
+                                <td>{{ current_user.work_time or 'غير محدد' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>أيام الراحة:</strong></td>
+                                <td>{{ current_user.rest_days or 'غير محدد' }}</td>
+                            </tr>
+                            {% if current_user.supervisor %}
+                            <tr>
+                                <td><strong>المشرف:</strong></td>
+                                <td>{{ current_user.supervisor.name }}</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

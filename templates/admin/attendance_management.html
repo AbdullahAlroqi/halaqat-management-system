@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة الحضور والغياب - التحضير{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2 class="mb-4"><i class="fas fa-clipboard-check"></i> إدارة الحضور والغياب - التحضير</h2>
+
+    <!-- الفلاتر -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-2">
+                    <label class="form-label">التاريخ</label>
+                    <input type="date" name="date" class="form-control" value="{{ date_filter }}" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">الاسم</label>
+                    <input type="text" name="name" class="form-control" value="{{ request.args.get('name', '') }}" placeholder="ابحث بالاسم">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">الجنس</label>
+                    <select name="gender" class="form-select">
+                        <option value="">الكل</option>
+                        <option value="ذكر" {% if request.args.get('gender') == 'ذكر' %}selected{% endif %}>ذكر</option>
+                        <option value="أنثى" {% if request.args.get('gender') == 'أنثى' %}selected{% endif %}>أنثى</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">القسم</label>
+                    <select name="department" class="form-select">
+                        <option value="">الكل</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept }}" {% if request.args.get('department') == dept %}selected{% endif %}>{{ dept }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">الفترة</label>
+                    <select name="period" class="form-select">
+                        <option value="">الكل</option>
+                        {% for period in periods %}
+                        <option value="{{ period }}" {% if request.args.get('period') == period %}selected{% endif %}>{{ period }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> بحث
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- جدول الحضور -->
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>الاسم</th>
+                            <th>الجنس</th>
+                            <th>القسم</th>
+                            <th>الفترة</th>
+                            <th>الوقت</th>
+                            <th>الحالة</th>
+                            <th>ملاحظات</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in employees %}
+                        {% set record = attendance_records.get(emp.id) %}
+                        <tr>
+                            <td>{{ emp.name }}</td>
+                            <td>{{ emp.gender }}</td>
+                            <td>{{ emp.department or '-' }}</td>
+                            <td>{{ emp.period or '-' }}</td>
+                            <td>{{ emp.work_time or '-' }}</td>
+                            <td>
+                                <select class="form-select form-select-sm attendance-status" data-employee-id="{{ emp.id }}">
+                                    <option value="">-- اختر الحالة --</option>
+                                    {% for status in absence_statuses %}
+                                    <option value="{{ status.id }}" 
+                                            data-status-name="{{ status.name }}"
+                                            {% if record and record.absence_status_id == status.id %}selected{% endif %}>
+                                        {{ status.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" class="form-control form-control-sm attendance-notes" 
+                                       data-employee-id="{{ emp.id }}"
+                                       value="{{ record.notes if record else '' }}"
+                                       placeholder="ملاحظات">
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-success save-attendance" data-employee-id="{{ emp.id }}">
+                                    <i class="fas fa-save"></i> حفظ
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">لا توجد نتائج</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const date = '{{ date_filter }}';
+
+document.querySelectorAll('.save-attendance').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const employeeId = this.dataset.employeeId;
+        const statusSelect = document.querySelector(`.attendance-status[data-employee-id="${employeeId}"]`);
+        const notesInput = document.querySelector(`.attendance-notes[data-employee-id="${employeeId}"]`);
+        
+        const absenceStatusId = statusSelect.value;
+        const statusName = statusSelect.options[statusSelect.selectedIndex]?.dataset.statusName || '';
+        const notes = notesInput.value;
+        
+        if (!absenceStatusId) {
+            alert('الرجاء اختيار الحالة');
+            return;
+        }
+        
+        fetch('{{ url_for("admin.mark_attendance") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                employee_id: employeeId,
+                date: date,
+                status: statusName,
+                absence_status_id: absenceStatusId,
+                notes: notes
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                btn.innerHTML = '<i class="fas fa-check"></i> تم الحفظ';
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-secondary');
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-save"></i> حفظ';
+                    btn.classList.remove('btn-secondary');
+                    btn.classList.add('btn-success');
+                }, 2000);
+            } else {
+                alert('حدث خطأ في الحفظ');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

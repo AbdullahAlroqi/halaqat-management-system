@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}جدول الحلقات{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-calendar-alt ms-2"></i>
+                جدول الحلقات
+            </h2>
+        </div>
+    </div>
+    
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <a href="{{ url_for('admin.upload_employees') }}" class="btn btn-islamic">
+                        <i class="fas fa-file-upload ms-1"></i>
+                        رفع ملف Excel
+                    </a>
+                    <a href="{{ url_for('admin.download_template') }}" class="btn btn-islamic-outline">
+                        <i class="fas fa-download ms-1"></i>
+                        تحميل نموذج Excel
+                    </a>
+                    {% if employees|length > 0 %}
+                    <a href="{{ url_for('admin.schedules_table_pdf', gender=request.args.get('gender', ''), department=request.args.get('department', ''), period=request.args.get('period', '')) }}" 
+                       class="btn btn-success" target="_blank">
+                        <i class="fas fa-file-pdf ms-1"></i>
+                        تصدير PDF
+                    </a>
+                    {% endif %}
+                    {% if current_user.role == 'مدير النظام الأساسي' and employees|length > 0 %}
+                    <form method="POST" action="{{ url_for('admin.delete_all_employees') }}" 
+                          onsubmit="return confirm('⚠️ هل أنت متأكد من حذف جميع بيانات المعلمين؟\n\nسيتم حذف:\n• جميع المعلمين ({{ employees|length }} معلم)\n• جميع جداولهم\n• جميع سجلات الحضور والإجازات\n\nهذه العملية لا يمكن التراجع عنها!');" 
+                          style="display: inline;">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt ms-1"></i>
+                            حذف جميع البيانات
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+                <div>
+                    <span class="badge bg-primary">إجمالي المعلمين: {{ employees|length }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- الفلاتر -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">الاسم</label>
+                    <input type="text" name="name" class="form-control" value="{{ request.args.get('name', '') }}" placeholder="ابحث بالاسم">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">الجنس</label>
+                    <select name="gender" class="form-select">
+                        <option value="">الكل</option>
+                        <option value="ذكر" {% if request.args.get('gender') == 'ذكر' %}selected{% endif %}>ذكر</option>
+                        <option value="أنثى" {% if request.args.get('gender') == 'أنثى' %}selected{% endif %}>أنثى</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">القسم</label>
+                    <select name="department" class="form-select">
+                        <option value="">الكل</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept }}" {% if request.args.get('department') == dept %}selected{% endif %}>{{ dept }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">الفترة</label>
+                    <select name="period" class="form-select">
+                        <option value="">الكل</option>
+                        {% for period in periods %}
+                        <option value="{{ period }}" {% if request.args.get('period') == period %}selected{% endif %}>{{ period }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> تصفية
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            {% if employees %}
+            <div class="card-islamic">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-islamic table-hover">
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%;">#</th>
+                                    <th style="width: 20%;">الاسم</th>
+                                    <th style="width: 12%;">الهوية</th>
+                                    <th style="width: 10%;">الفترة</th>
+                                    <th style="width: 12%;">الوقت</th>
+                                    <th style="width: 15%;">الراحة</th>
+                                    <th style="width: 10%;">القسم</th>
+                                    <th style="width: 8%;">الجنس</th>
+                                    <th style="width: 10%;">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for employee in employees %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>
+                                        <i class="fas fa-user text-muted ms-1"></i>
+                                        {{ employee.name }}
+                                    </td>
+                                    <td>
+                                        <code>{{ employee.national_id }}</code>
+                                    </td>
+                                    <td>
+                                        {% if employee.period %}
+                                        <span class="badge bg-info">{{ employee.period }}</span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if employee.work_time %}
+                                        <i class="fas fa-clock text-primary ms-1"></i>
+                                        {{ employee.work_time }}
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if employee.rest_days %}
+                                        <i class="fas fa-calendar-times text-danger ms-1"></i>
+                                        {{ employee.rest_days }}
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if employee.department %}
+                                        <span class="badge bg-secondary">{{ employee.department }}</span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if employee.gender == 'ذكر' %}
+                                        <span class="badge bg-primary">ذكر</span>
+                                        {% else %}
+                                        <span class="badge bg-info">أنثى</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('admin.edit_employee_schedule', employee_id=employee.id) }}" 
+                                           class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit"></i> تعديل
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">لا يوجد معلمين</h4>
+                <p class="text-muted">لم يتم إضافة معلمين بعد</p>
+                <a href="{{ url_for('admin.upload_employees') }}" class="btn btn-islamic mt-3">
+                    <i class="fas fa-file-upload ms-1"></i>
+                    رفع ملف Excel
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if employees %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-info-circle ms-1"></i>
+                        ملاحظات
+                    </h5>
+                    <ul class="mb-0">
+                        <li>يمكنك رفع ملف Excel يحتوي على: رقم الهوية، الاسم، الفترة، الوقت، أيام الراحة</li>
+                        <li>الفترات المتاحة: الأولى، الثانية، الثالثة، الرابعة، السادسة</li>
+                        <li>أمثلة على الوقت: 4م-8م، 10ص-2م، 6ص-10ص، الخ</li>
+                        <li>أمثلة على أيام الراحة: الاثنين والثلاثاء، الجمعة والسبت، السبت والأحد</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

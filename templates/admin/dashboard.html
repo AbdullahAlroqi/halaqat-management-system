@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}لوحة تحكم الإدارة{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-tachometer-alt ms-2"></i>
+                لوحة تحكم الإدارة
+            </h2>
+        </div>
+    </div>
+    
+    <!-- الإحصائيات -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <i class="fas fa-users"></i>
+                <h3>{{ total_employees }}</h3>
+                <p>إجمالي الموظفين</p>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <i class="fas fa-user-tie"></i>
+                <h3>{{ total_supervisors }}</h3>
+                <p>المشرفون</p>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <i class="fas fa-clock"></i>
+                <h3>{{ pending_leaves }}</h3>
+                <p>طلبات قيد الانتظار</p>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <i class="fas fa-user-check"></i>
+                <h3>{{ present_today }}</h3>
+                <p>حضور اليوم</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- الإجراءات السريعة -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card-islamic h-100">
+                <div class="card-header">
+                    <i class="fas fa-bolt ms-2"></i>
+                    إجراءات سريعة
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-3">
+                        <a href="{{ url_for('admin.add_employee') }}" class="btn btn-islamic">
+                            <i class="fas fa-user-plus ms-1"></i>
+                            إضافة موظف جديد
+                        </a>
+                        <a href="{{ url_for('admin.add_supervisor') }}" class="btn btn-islamic">
+                            <i class="fas fa-user-tie ms-1"></i>
+                            إضافة مشرف جديد
+                        </a>
+                        <a href="{{ url_for('admin.upload_employees') }}" class="btn btn-islamic-outline">
+                            <i class="fas fa-file-excel ms-1"></i>
+                            رفع ملف Excel
+                        </a>
+                        <a href="{{ url_for('admin.leave_requests') }}" class="btn btn-islamic-outline">
+                            <i class="fas fa-inbox ms-1"></i>
+                            طلبات الإجازات
+                        </a>
+                        <a href="{{ url_for('admin.reports') }}" class="btn btn-islamic-outline">
+                            <i class="fas fa-chart-bar ms-1"></i>
+                            التقارير
+                        </a>
+                        <a href="{{ url_for('admin.account_settings') }}" class="btn btn-success">
+                            <i class="fas fa-user-cog ms-1"></i>
+                            إعدادات الحساب
+                        </a>
+                        {% if current_user.role == 'مدير النظام الأساسي' %}
+                        <a href="{{ url_for('admin.customize') }}" class="btn btn-islamic-outline">
+                            <i class="fas fa-palette ms-1"></i>
+                            تخصيص المظهر
+                        </a>
+                        <form method="POST" action="{{ url_for('admin.delete_test_data_route') }}" 
+                              onsubmit="return confirm('⚠️ هل أنت متأكد من حذف جميع بيانات الاختبار؟\n\nسيتم حذف:\n• جميع المشرفين التجريبيين\n• جميع الموظفين التجريبيين\n• جميع الجداول والحضور والإجازات المرتبطة بهم\n\nهذه العملية لا يمكن التراجع عنها!');" 
+                              style="display: inline;">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt ms-1"></i>
+                                حذف بيانات الاختبار
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <div class="card-islamic h-100">
+                <div class="card-header">
+                    <i class="fas fa-clock ms-2"></i>
+                    آخر طلبات الإجازات
+                </div>
+                <div class="card-body">
+                    {% if recent_leaves %}
+                    <div class="list-group">
+                        {% for leave in recent_leaves %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ leave.employee.name }}</h6>
+                                <small>
+                                    {% if leave.status == 'قيد الانتظار' %}
+                                    <span class="badge badge-pending">{{ leave.status }}</span>
+                                    {% elif leave.status == 'مقبول' %}
+                                    <span class="badge badge-approved">{{ leave.status }}</span>
+                                    {% else %}
+                                    <span class="badge badge-rejected">{{ leave.status }}</span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <p class="mb-1 small">{{ leave.leave_type.name }} - {{ leave.days_count }} يوم</p>
+                            <small class="text-muted">{{ leave.created_at.strftime('%Y-%m-%d') }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle ms-2"></i>
+                        لا توجد طلبات حديثة
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}إسناد المعلمين للمشرفين الفرعيين{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-link ms-2"></i>
+                إسناد المعلمين للمشرفين الفرعيين
+            </h2>
+        </div>
+    </div>
+    
+    {% if not sub_supervisors %}
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle ms-2"></i>
+        <strong>تنبيه:</strong> يجب إضافة مشرفين فرعيين أولاً
+        <a href="{{ url_for('supervisor.add_sub_supervisor') }}" class="btn btn-sm btn-warning">
+            إضافة مشرف فرعي
+        </a>
+    </div>
+    {% endif %}
+    
+    {% if not employees %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle ms-2"></i>
+        لا يوجد معلمون متاحون للإسناد
+    </div>
+    {% endif %}
+    
+    {% if sub_supervisors and employees %}
+    <form method="POST" action="{{ url_for('supervisor.assign_to_subs') }}">
+        <div class="row">
+            <div class="col-md-12 mb-4">
+                <div class="card-islamic">
+                    <div class="card-header">
+                        <i class="fas fa-user-tie ms-2"></i>
+                        اختر المشرف الفرعي
+                    </div>
+                    <div class="card-body">
+                        <select name="supervisor_id" class="form-select" required>
+                            <option value="">اختر المشرف الفرعي</option>
+                            {% for sup in sub_supervisors %}
+                            <option value="{{ sup.id }}">
+                                {{ sup.name }} - {{ sup.department or 'بدون قسم' }} - 
+                                لديه {{ sup.subordinates.count() }} موظف
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12 mb-4">
+                <div class="card-islamic">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="fas fa-users ms-2"></i>
+                            اختر المعلمين المسندين لك
+                        </span>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="selectAll" 
+                                   onclick="toggleAllCheckboxes(this)">
+                            <label class="form-check-label" for="selectAll">
+                                تحديد الكل
+                            </label>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for emp in employees %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" 
+                                           name="employee_ids" value="{{ emp.id }}" 
+                                           id="emp_{{ emp.id }}">
+                                    <label class="form-check-label" for="emp_{{ emp.id }}">
+                                        {{ emp.name }} - {{ emp.department or 'بدون قسم' }}
+                                        <br>
+                                        <small class="text-muted">{{ emp.national_id }}</small>
+                                        {% if emp.shift_time %}
+                                        <br>
+                                        <small class="text-info">⏰ {{ emp.shift_time }}</small>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center">
+            <button type="submit" class="btn btn-islamic btn-lg">
+                <i class="fas fa-save ms-1"></i>
+                حفظ الإسناد
+            </button>
+        </div>
+    </form>
+    {% endif %}
+</div>
+
+<script>
+function toggleAllCheckboxes(source) {
+    const checkboxes = document.querySelectorAll('input[name="employee_ids"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = source.checked;
+    });
+}
+</script>
+{% endblock %}

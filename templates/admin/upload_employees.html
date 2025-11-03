@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}رفع ملف Excel{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card-islamic">
+                <div class="card-header text-center">
+                    <i class="fas fa-file-excel fa-2x mb-2"></i>
+                    <h3 class="mb-0">رفع ملف Excel للموظفين</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-info-circle ms-2"></i>
+                            تعليمات الرفع
+                        </h5>
+                        <ol class="mb-0">
+                            <li><strong>حمّل النموذج:</strong> اضغط على "تحميل نموذج Excel"</li>
+                            <li><strong>املأ البيانات:</strong> الاسم، الهوية، الفترة، الوقت، الراحة، القسم، الجنس</li>
+                            <li><strong>ارفع الملف:</strong> استخدم النموذج أدناه</li>
+                            <li><strong>ملاحظة:</strong> إذا كان الموظف موجوداً، سيتم تحديث بياناته</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle ms-2"></i>
+                            مهم: ترتيب الأعمدة
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small>
+                                    1. الاسم<br>
+                                    2. الهوية<br>
+                                    3. الفترة (الأولى، الثانية، الثالثة، الرابعة، السادسة)<br>
+                                    4. الوقت (مثال: 4م-8م، 10ص-2م)
+                                </small>
+                            </div>
+                            <div class="col-md-6">
+                                <small>
+                                    5. الراحة (مثال: الاثنين والثلاثاء)<br>
+                                    6. القسم (مثال: الحلقات)<br>
+                                    7. الجنس (ذكر أو أنثى)
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mb-4">
+                        <a href="{{ url_for('admin.download_template') }}" class="btn btn-islamic-outline btn-lg">
+                            <i class="fas fa-download ms-1"></i>
+                            تحميل نموذج Excel
+                        </a>
+                    </div>
+                    
+                    <hr>
+                    
+                    <form method="POST" action="{{ url_for('admin.upload_employees') }}" enctype="multipart/form-data" class="form-islamic">
+                        <div class="mb-4">
+                            <label for="file" class="form-label">
+                                <i class="fas fa-file-upload ms-1"></i>
+                                اختر ملف Excel
+                            </label>
+                            <input type="file" class="form-control" id="file" name="file" 
+                                   accept=".xlsx,.xls" required>
+                            <small class="form-text text-muted">
+                                الملفات المدعومة: .xlsx, .xls
+                            </small>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-islamic btn-lg">
+                                <i class="fas fa-upload ms-1"></i>
+                                رفع الملف
+                            </button>
+                            <a href="{{ url_for('admin.employees') }}" class="btn btn-islamic-outline">
+                                <i class="fas fa-arrow-right ms-1"></i>
+                                رجوع
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة المشرفين{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-user-tie ms-2"></i>
+                إدارة المشرفين
+            </h2>
+        </div>
+    </div>
+    
+    <div class="row mb-3">
+        <div class="col-12 text-end">
+            <a href="{{ url_for('admin.add_supervisor') }}" class="btn btn-islamic">
+                <i class="fas fa-user-plus ms-1"></i>
+                إضافة مشرف
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card-islamic">
+                <div class="card-body">
+                    {% if supervisors %}
+                    <div class="table-responsive">
+                        <table class="table table-islamic">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الاسم</th>
+                                    <th>رقم الهوية</th>
+                                    <th>النوع</th>
+                                    <th>القسم</th>
+                                    <th>الفترة</th>
+                                    <th>الموظفون التابعون</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for supervisor in supervisors %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ supervisor.name }}</td>
+                                    <td>{{ supervisor.national_id }}</td>
+                                    <td>
+                                        {% if supervisor.role == 'مشرف رئيسي' %}
+                                        <span class="badge bg-primary">{{ supervisor.role }}</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ supervisor.role }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ supervisor.department or '-' }}</td>
+                                    <td>{{ supervisor.shift_time or '-' }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ supervisor.subordinates|length }}</span>
+                                    </td>
+                                    <td>
+                                        {% if supervisor.is_active %}
+                                        <span class="badge bg-success">نشط</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">غير نشط</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('admin.edit_supervisor', supervisor_id=supervisor.id) }}" 
+                                           class="btn btn-sm btn-warning me-1">
+                                            <i class="fas fa-edit"></i> تعديل
+                                        </a>
+                                        <button onclick='deleteSupervisor({{ supervisor.id }}, "{{ supervisor.name }}")' 
+                                                class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i> حذف
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-user-tie fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">لا يوجد مشرفون</h4>
+                        <a href="{{ url_for('admin.add_supervisor') }}" class="btn btn-islamic mt-3">
+                            <i class="fas fa-plus ms-1"></i>
+                            إضافة مشرف جديد
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function deleteSupervisor(id, name) {
+    if (confirm(`هل أنت متأكد من حذف المشرف: ${name}؟\n\nسيتم إلغاء إسناد الموظفين التابعين له.`)) {
+        fetch(`/admin/supervisors/delete/${id}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الحذف');
+            }
+        })
+        .catch(error => {
+            alert('حدث خطأ: ' + error);
+        });
+    }
+}
+</script>
+{% endblock %}

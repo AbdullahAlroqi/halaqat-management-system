@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}سجل النشاطات{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2 class="mb-4"><i class="fas fa-history"></i> سجل النشاطات</h2>
+
+    <!-- الفلاتر -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">نوع العملية</label>
+                    <select name="action" class="form-select">
+                        <option value="">الكل</option>
+                        <option value="إضافة" {% if request.args.get('action') == 'إضافة' %}selected{% endif %}>إضافة</option>
+                        <option value="تعديل" {% if request.args.get('action') == 'تعديل' %}selected{% endif %}>تعديل</option>
+                        <option value="حذف" {% if request.args.get('action') == 'حذف' %}selected{% endif %}>حذف</option>
+                        <option value="تحديث حضور" {% if request.args.get('action') == 'تحديث حضور' %}selected{% endif %}>تحديث حضور</option>
+                        <option value="طباعة تقرير" {% if request.args.get('action') == 'طباعة تقرير' %}selected{% endif %}>طباعة تقرير</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">نوع الهدف</label>
+                    <select name="target_type" class="form-select">
+                        <option value="">الكل</option>
+                        <option value="موظف" {% if request.args.get('target_type') == 'موظف' %}selected{% endif %}>موظف</option>
+                        <option value="مشرف" {% if request.args.get('target_type') == 'مشرف' %}selected{% endif %}>مشرف</option>
+                        <option value="مدير نظام" {% if request.args.get('target_type') == 'مدير نظام' %}selected{% endif %}>مدير نظام</option>
+                        <option value="حالة غياب" {% if request.args.get('target_type') == 'حالة غياب' %}selected{% endif %}>حالة غياب</option>
+                        <option value="جدول" {% if request.args.get('target_type') == 'جدول' %}selected{% endif %}>جدول</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">من تاريخ</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ request.args.get('date_from', '') }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">إلى تاريخ</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ request.args.get('date_to', '') }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> تصفية
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- الجدول -->
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>التاريخ والوقت</th>
+                            <th>المستخدم</th>
+                            <th>العملية</th>
+                            <th>نوع الهدف</th>
+                            <th>التفاصيل</th>
+                            <th>IP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs.items %}
+                        <tr>
+                            <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>{{ log.user.name }}</td>
+                            <td>
+                                {% if log.action == 'إضافة' %}
+                                    <span class="badge bg-success">{{ log.action }}</span>
+                                {% elif log.action == 'تعديل' %}
+                                    <span class="badge bg-warning">{{ log.action }}</span>
+                                {% elif log.action == 'حذف' %}
+                                    <span class="badge bg-danger">{{ log.action }}</span>
+                                {% else %}
+                                    <span class="badge bg-info">{{ log.action }}</span>
+                                {% endif %}
+                            </td>
+                            <td><span class="badge bg-secondary">{{ log.target_type }}</span></td>
+                            <td>{{ log.details or '-' }}</td>
+                            <td><small class="text-muted">{{ log.ip_address or '-' }}</small></td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">لا توجد سجلات</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if logs.pages > 1 %}
+            <nav>
+                <ul class="pagination justify-content-center">
+                    {% if logs.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.activity_logs', page=logs.prev_num, **request.args) }}">السابق</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page_num in logs.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                        {% if page_num %}
+                            {% if page_num == logs.page %}
+                                <li class="page-item active"><a class="page-link" href="#">{{ page_num }}</a></li>
+                            {% else %}
+                                <li class="page-item"><a class="page-link" href="{{ url_for('admin.activity_logs', page=page_num, **request.args) }}">{{ page_num }}</a></li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if logs.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.activity_logs', page=logs.next_num, **request.args) }}">التالي</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

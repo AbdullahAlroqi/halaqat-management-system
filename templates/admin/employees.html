@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة الموظفين{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-users ms-2"></i>
+                إدارة الموظفين
+            </h2>
+        </div>
+    </div>
+    
+    <div class="row mb-3">
+        <div class="col-12 text-end">
+            <a href="{{ url_for('admin.add_employee') }}" class="btn btn-islamic me-2">
+                <i class="fas fa-user-plus ms-1"></i>
+                إضافة موظف
+            </a>
+            <a href="{{ url_for('admin.upload_employees') }}" class="btn btn-islamic-outline">
+                <i class="fas fa-file-excel ms-1"></i>
+                رفع ملف Excel
+            </a>
+        </div>
+    </div>
+    
+    <!-- الفلاتر -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">اسم الموظف</label>
+                    <input type="text" name="name" class="form-control" value="{{ request.args.get('name', '') }}" placeholder="ابحث بالاسم">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">الجنس</label>
+                    <select name="gender" class="form-select">
+                        <option value="">الكل</option>
+                        <option value="ذكر" {% if request.args.get('gender') == 'ذكر' %}selected{% endif %}>ذكر</option>
+                        <option value="أنثى" {% if request.args.get('gender') == 'أنثى' %}selected{% endif %}>أنثى</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">القسم</label>
+                    <select name="department" class="form-select">
+                        <option value="">الكل</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept }}" {% if request.args.get('department') == dept %}selected{% endif %}>{{ dept }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> تصفية
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card-islamic">
+                <div class="card-body">
+                    {% if employees %}
+                    <div class="mb-3">
+                        <input type="text" id="searchInput" class="form-control" 
+                               placeholder="بحث عن موظف..." 
+                               onkeyup="searchTable('searchInput', 'employeesTable')">
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-islamic" id="employeesTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الاسم</th>
+                                    <th>رقم الهوية</th>
+                                    <th>الفترة</th>
+                                    <th>الوقت</th>
+                                    <th>القسم</th>
+                                    <th>المشرف</th>
+                                    <th>الحالة</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for emp in employees %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ emp.name }}</td>
+                                    <td><code>{{ emp.national_id }}</code></td>
+                                    <td>
+                                        {% if emp.period %}
+                                        <span class="badge bg-info">{{ emp.period }}</span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ emp.work_time or '-' }}</td>
+                                    <td>{{ emp.department or '-' }}</td>
+                                    <td>
+                                        {% if emp.supervisor %}
+                                        {{ emp.supervisor.name }}
+                                        {% else %}
+                                        <span class="text-muted">غير مسند</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if emp.is_active %}
+                                        <span class="badge bg-success">نشط</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">غير نشط</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('admin.edit_employee', employee_id=emp.id) }}" 
+                                           class="btn btn-sm btn-islamic-outline me-1">
+                                            <i class="fas fa-edit ms-1"></i>
+                                            تعديل
+                                        </a>
+                                        <button onclick='deleteEmployee({{ emp.id }}, "{{ emp.name }}")' 
+                                                class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash ms-1"></i>
+                                            حذف
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">لا يوجد موظفون</h4>
+                        <a href="{{ url_for('admin.add_employee') }}" class="btn btn-islamic mt-3">
+                            <i class="fas fa-plus ms-1"></i>
+                            إضافة موظف جديد
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function deleteEmployee(id, name) {
+    if (confirm(`هل أنت متأكد من حذف الموظف: ${name}؟\n\nسيتم حذف جميع السجلات المرتبطة به.`)) {
+        fetch(`/admin/employees/delete/${id}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الحذف');
+            }
+        })
+        .catch(error => {
+            alert('حدث خطأ: ' + error);
+        });
+    }
+}
+</script>
+{% endblock %}

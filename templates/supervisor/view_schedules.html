@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}عرض الجداول{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-calendar-alt ms-2"></i>
+                جداول الموظفين
+            </h2>
+        </div>
+    </div>
+    
+    <div class="row mb-3">
+        <div class="col-12 text-end">
+            <button onclick="printPage()" class="btn btn-islamic-outline">
+                <i class="fas fa-print ms-1"></i>
+                طباعة جميع الجداول
+            </button>
+        </div>
+    </div>
+    
+    {% if schedules_data %}
+    {% for item in schedules_data %}
+    <div class="card-islamic mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-user ms-2"></i>
+                <strong>{{ item.employee.name }}</strong> - {{ item.employee.national_id }}
+                <br>
+                <small class="text-muted">
+                    {% if item.employee.period %}الفترة: {{ item.employee.period }} | {% endif %}
+                    {% if item.employee.work_time %}الوقت: {{ item.employee.work_time }} | {% endif %}
+                    {% if item.employee.rest_days %}الراحة: {{ item.employee.rest_days }}{% endif %}
+                </small>
+            </div>
+            <form method="POST" action="{{ url_for('supervisor.copy_schedule', employee_id=item.employee.id) }}" 
+                  style="display: inline;" onsubmit="return confirm('هل تريد نسخ هذا الجدول للشهر القادم؟');">
+                <button type="submit" class="btn btn-sm btn-islamic-outline">
+                    <i class="fas fa-copy ms-1"></i>
+                    نسخ للشهر القادم
+                </button>
+            </form>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-islamic text-center">
+                    <thead>
+                        <tr>
+                            <th>اليوم</th>
+                            <th>الفترة</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for schedule in item.schedules %}
+                        <tr>
+                            <td><strong>{{ schedule.day_of_week }}</strong></td>
+                            <td>{{ schedule.shift_time }}</td>
+                            <td>
+                                {% if schedule.is_rest_day %}
+                                <span class="badge bg-warning text-dark">راحة</span>
+                                {% else %}
+                                <span class="badge bg-success">عمل</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="card-islamic">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">لا توجد جداول محفوظة</h4>
+            <a href="{{ url_for('supervisor.schedules') }}" class="btn btn-islamic mt-3">
+                <i class="fas fa-plus ms-1"></i>
+                رفع جداول جديدة
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
