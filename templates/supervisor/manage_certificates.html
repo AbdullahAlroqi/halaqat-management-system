@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}إدارة الشهادات{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-certificate ms-2"></i>
+                إدارة الشهادات
+            </h2>
+        </div>
+    </div>
+
+    <div class="card-islamic">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-list ms-2"></i>
+                قائمة الشهادات
+            </h5>
+            <a href="{{ url_for('certificates.add_certificate') }}" class="btn btn-islamic">
+                <i class="fas fa-plus ms-1"></i>
+                إضافة شهادة جديدة
+            </a>
+        </div>
+        <div class="card-body">
+            {% if certificates %}
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>اسم الطالب</th>
+                            <th>الجنسية</th>
+                            <th>الجوال</th>
+                            <th>نوع الختمة</th>
+                            <th>تاريخ الختمة المتوقع</th>
+                            <th>المعلم</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cert in certificates %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ cert.student_name }}</td>
+                            <td>{{ cert.nationality }}</td>
+                            <td>{{ cert.phone }}</td>
+                            <td>{{ cert.completion_type }}</td>
+                            <td>{{ cert.expected_completion_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ cert.teacher_name }}</td>
+                            <td>
+                                {% if cert.status == 'تمت' %}
+                                <span class="badge bg-success">تمت</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">جاري العمل</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% set time_since_creation = (now() - cert.created_at).total_seconds() %}
+                                <div class="btn-group" role="group">
+                                    {% if time_since_creation <= 86400 %}
+                                    <a href="{{ url_for('certificates.edit_certificate', cert_id=cert.id) }}" 
+                                       class="btn btn-sm btn-outline-primary" 
+                                       title="تعديل">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger delete-cert-btn" 
+                                            data-cert-id="{{ cert.id }}"
+                                            data-cert-name="{{ cert.student_name }}"
+                                            title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    {% else %}
+                                    <button class="btn btn-sm btn-outline-secondary" disabled title="انتهت فترة التعديل/الحذف">
+                                        <i class="fas fa-lock"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle ms-2"></i>
+                لا توجد شهادات مسجلة حتى الآن
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // حذف شهادة
+    document.querySelectorAll('.delete-cert-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const certId = this.dataset.certId;
+            const certName = this.dataset.certName;
+            
+            if (confirm(`هل أنت متأكد من حذف شهادة الطالب: ${certName}؟\n\nهذه العملية لا يمكن التراجع عنها!`)) {
+                fetch(`/certificates/delete/${certId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        window.location.reload();
+                    } else {
+                        alert('خطأ: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('حدث خطأ أثناء حذف الشهادة');
+                });
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

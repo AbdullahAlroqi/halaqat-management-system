@@ -28,10 +28,16 @@
                             <p><strong>رقم الهوية:</strong> {{ user.national_id }}</p>
                             <p><strong>القسم:</strong> {{ user.department or 'غير محدد' }}</p>
                             <p><strong>الجنس:</strong> {{ user.gender }}</p>
+                            <p><strong>رصيد الإجازات::</strong> {{ user.leave_balance }} يوم</p>
                         </div>
+                        
+                    </div>
+                    <div class="row">
                         <div class="col-md-6">
                             <p><strong>الفترة:</strong> {{ user.period or 'غير محدد' }}</p>
                             <p><strong>الوقت:</strong> {{ user.work_time or 'غير محدد' }}</p>
+                        </div>
+                        <div class="col-md-6">
                             <p><strong>أيام الراحة:</strong> {{ user.rest_days or 'غير محدد' }}</p>
                             {% if user.supervisor %}
                             <p><strong>المشرف:</strong> {{ user.supervisor.name }}</p>

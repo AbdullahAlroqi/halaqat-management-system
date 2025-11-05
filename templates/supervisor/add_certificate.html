@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}إضافة شهادة جديدة{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-certificate ms-2"></i>
+                إضافة شهادة جديدة
+            </h2>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-islamic">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus-circle ms-2"></i>
+                        بيانات الشهادة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('certificates.add_certificate') }}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="student_name" class="form-label">
+                                    <i class="fas fa-user ms-1"></i>
+                                    اسم الطالب <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="student_name" 
+                                       name="student_name" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="nationality" class="form-label">
+                                    <i class="fas fa-flag ms-1"></i>
+                                    الجنسية <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="nationality" 
+                                       name="nationality" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">
+                                    <i class="fas fa-phone ms-1"></i>
+                                    الجوال <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="phone" 
+                                       name="phone" required pattern="[0-9+\-\s()]*">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="expected_completion_date" class="form-label">
+                                    <i class="fas fa-calendar ms-1"></i>
+                                    تاريخ الختمة المتوقع <span class="text-danger">*</span>
+                                </label>
+                                <input type="date" class="form-control" id="expected_completion_date" 
+                                       name="expected_completion_date" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="narration_type" class="form-label">
+                                    <i class="fas fa-book-open ms-1"></i>
+                                    الرواية <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="narration_type" 
+                                       name="narration_type" required 
+                                       placeholder="مثال: حفص عن عاصم">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="halaqah" class="form-label">
+                                    <i class="fas fa-mosque ms-1"></i>
+                                    المقرأة أو الحلقات <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="halaqah" 
+                                       name="halaqah" required 
+                                       placeholder="مثال: مقرأة النور، حلقة المسجد الحرام">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="completion_type" class="form-label">
+                                    <i class="fas fa-graduation-cap ms-1"></i>
+                                    نوع الختمة <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="completion_type" 
+                                       name="completion_type" required 
+                                       placeholder="مثال: تلاوة، حفظ، عرض ختمة">
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="teacher_name" class="form-label">
+                                    <i class="fas fa-chalkboard-teacher ms-1"></i>
+                                    اسم المعلم <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="teacher_name" 
+                                       name="teacher_name" required>
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label for="notes" class="form-label">
+                                    <i class="fas fa-sticky-note ms-1"></i>
+                                    ملاحظات
+                                </label>
+                                <textarea class="form-control" id="notes" name="notes" 
+                                          rows="3" placeholder="أي ملاحظات إضافية..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('certificates.manage_certificates') }}" 
+                               class="btn btn-secondary">
+                                <i class="fas fa-arrow-right ms-1"></i>
+                                رجوع
+                            </a>
+                            <button type="submit" class="btn btn-islamic">
+                                <i class="fas fa-save ms-1"></i>
+                                حفظ الشهادة
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

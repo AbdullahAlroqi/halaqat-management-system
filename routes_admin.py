@@ -1,10 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_file, make_response
 from flask_login import login_required, current_user
-<<<<<<< HEAD
-from models import db, User, Role, LeaveRequest, LeaveType, Schedule, Attendance, SystemSettings, Notification, ActivityLog, AbsenceStatus
-=======
-from models import db, User, Role, LeaveRequest, LeaveType, Schedule, Attendance, SystemSettings, Notification
->>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
+from models import db, User, Role, LeaveRequest, LeaveType, Schedule, Attendance, SystemSettings, Notification, ActivityLog, AbsenceStatus, Certificate
 from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 import openpyxl
@@ -19,7 +15,6 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.enums import TA_RIGHT, TA_CENTER
-<<<<<<< HEAD
 from sqlalchemy import or_, and_
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -42,11 +37,6 @@ def log_activity(action, target_type, target_id=None, details=None):
     except Exception as e:
         print(f"Error logging activity: {str(e)}")
 
-=======
-
-admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
-
->>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
 # التحقق من صلاحيات الإدارة
 def admin_required():
     return current_user.is_authenticated and current_user.role in [Role.MAIN_ADMIN, Role.SUB_ADMIN]
@@ -135,12 +125,9 @@ def add_supervisor():
         db.session.add(supervisor)
         db.session.commit()
         
-<<<<<<< HEAD
         # تسجيل النشاط
         log_activity('إضافة', 'مشرف', supervisor.id, f'تم إضافة المشرف: {supervisor.name}')
         
-=======
->>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
         flash('تم إضافة المشرف بنجاح', 'success')
         return redirect(url_for('admin.supervisors'))
     
@@ -154,7 +141,6 @@ def employees():
         flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
         return redirect(url_for('index'))
     
-<<<<<<< HEAD
     # الفلاتر
     gender_filter = request.args.get('gender', '')
     department_filter = request.args.get('department', '')
@@ -178,10 +164,6 @@ def employees():
     return render_template('admin/employees.html', 
                           employees=employees_list,
                           departments=departments)
-=======
-    employees_list = User.query.filter_by(role=Role.EMPLOYEE).all()
-    return render_template('admin/employees.html', employees=employees_list)
->>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
 
 # إضافة موظف يدوياً
 @admin_bp.route('/employees/add', methods=['GET', 'POST'])
@@ -216,12 +198,9 @@ def add_employee():
         db.session.add(employee)
         db.session.commit()
         
-<<<<<<< HEAD
         # تسجيل النشاط
         log_activity('إضافة', 'موظف', employee.id, f'تم إضافة الموظف: {employee.name}')
         
-=======
->>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
         flash('تم إضافة الموظف بنجاح', 'success')
         return redirect(url_for('admin.employees'))
     
@@ -253,13 +232,10 @@ def edit_employee(employee_id):
             employee.set_password(password)
         
         db.session.commit()
-<<<<<<< HEAD
         
         # تسجيل النشاط
         log_activity('تعديل', 'موظف', employee.id, f'تم تعديل معلومات الموظف: {employee.name}')
         
-=======
->>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
         flash('تم تعديل الموظف بنجاح', 'success')
         return redirect(url_for('admin.employees'))
     
@@ -271,7 +247,6 @@ def edit_employee(employee_id):
                           shift_start=shift_parts[0] if len(shift_parts) > 0 else '',
                           shift_end=shift_parts[1] if len(shift_parts) > 1 else '')
 
-<<<<<<< HEAD
 # حذف موظف
 @admin_bp.route('/employees/delete/<int:employee_id>', methods=['POST'])
 @login_required
@@ -376,8 +351,6 @@ def edit_supervisor(supervisor_id):
     
     return render_template('admin/edit_supervisor.html', supervisor=supervisor)
 
-=======
->>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
 # رفع ملف Excel للموظفين
 @admin_bp.route('/employees/upload', methods=['GET', 'POST'])
 @login_required
@@ -537,11 +510,13 @@ def add_leave_type():
     name = request.form.get('name')
     max_days = request.form.get('max_days', type=int)
     requires_attachment = request.form.get('requires_attachment') == 'on'
+    deduct_from_balance = request.form.get('deduct_from_balance') == 'on'
     
     leave_type = LeaveType(
         name=name,
         max_days=max_days,
-        requires_attachment=requires_attachment
+        requires_attachment=requires_attachment,
+        deduct_from_balance=deduct_from_balance
     )
     
     db.session.add(leave_type)
@@ -562,6 +537,7 @@ def edit_leave_type(leave_type_id):
     leave_type.name = request.form.get('name')
     leave_type.max_days = request.form.get('max_days', type=int)
     leave_type.requires_attachment = request.form.get('requires_attachment') == 'on'
+    leave_type.deduct_from_balance = request.form.get('deduct_from_balance') == 'on'
     leave_type.is_active = request.form.get('is_active') == 'on'
     
     db.session.commit()
@@ -979,6 +955,16 @@ def review_leave(request_id):
         leave_request.reviewed_by = current_user.id
         leave_request.reviewed_at = datetime.now()
         leave_request.review_notes = notes
+        
+        # خصم من رصيد الإجازات إذا كان نوع الإجازة يتطلب ذلك
+        if leave_request.leave_type.deduct_from_balance:
+            employee = leave_request.employee
+            employee.leave_balance -= leave_request.days_count
+            
+            # تسجيل النشاط
+            log_activity('خصم رصيد إجازة', 'user', employee.id, 
+                        f'تم خصم {leave_request.days_count} يوم من رصيد {employee.name} (نوع: {leave_request.leave_type.name})')
+        
         flash('تم قبول طلب الإجازة بنجاح', 'success')
     elif action == 'reject':
         leave_request.status = 'مرفوض'
@@ -999,7 +985,6 @@ def schedules_table():
         flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
         return redirect(url_for('index'))
     
-<<<<<<< HEAD
     # الفلاتر
     gender_filter = request.args.get('gender', '')
     department_filter = request.args.get('department', '')
@@ -1033,12 +1018,6 @@ def schedules_table():
                           employees=employees,
                           departments=departments,
                           periods=periods)
-=======
-    # جلب جميع المعلمين (الموظفين) مع معلومات جدولهم
-    employees = User.query.filter_by(role=Role.EMPLOYEE, is_active=True).order_by(User.name).all()
-    
-    return render_template('admin/schedules_table.html', employees=employees)
->>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
 
 # حذف جميع بيانات المعلمين
 @admin_bp.route('/delete-all-employees', methods=['POST'])
@@ -1141,7 +1120,6 @@ def account_settings():
             return redirect(url_for('admin.account_settings'))
     
     return render_template('admin/account_settings.html')
-<<<<<<< HEAD
 
 # إدارة مديري النظام
 @admin_bp.route('/system-admins')
@@ -1601,5 +1579,85 @@ def schedules_table_pdf():
     log_activity('طباعة تقرير', 'جدول', None, f'تم طباعة تقرير جدول المعلمين')
     
     return send_file(buffer, as_attachment=True, download_name=f'schedule_table_{datetime.now().strftime("%Y%m%d")}.pdf', mimetype='application/pdf')
-=======
->>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
+
+# تعديل شهادة للمدير
+@admin_bp.route('/certificates/edit/<int:cert_id>', methods=['POST'])
+@login_required
+def edit_certificate(cert_id):
+    if not admin_required():
+        flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
+        return redirect(url_for('index'))
+    
+    certificate = Certificate.query.get_or_404(cert_id)
+    
+    try:
+        certificate.student_name = request.form.get('student_name', certificate.student_name)
+        certificate.nationality = request.form.get('nationality', certificate.nationality)
+        certificate.phone = request.form.get('phone', certificate.phone)
+        certificate.expected_completion_date = datetime.strptime(
+            request.form.get('expected_completion_date'), '%Y-%m-%d'
+        ).date()
+        certificate.narration_type = request.form.get('narration_type', certificate.narration_type)
+        certificate.halaqah = request.form.get('halaqah', certificate.halaqah)
+        certificate.completion_type = request.form.get('completion_type', certificate.completion_type)
+        certificate.teacher_name = request.form.get('teacher_name', certificate.teacher_name)
+        certificate.notes = request.form.get('notes', certificate.notes)
+        certificate.updated_by = current_user.id
+        certificate.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        # تسجيل النشاط
+        log_activity('تعديل شهادة', 'certificate', cert_id, f'تم تعديل شهادة الطالب {certificate.student_name}')
+        
+        flash('تم تحديث الشهادة بنجاح', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ أثناء تحديث الشهادة', 'danger')
+    
+    return redirect(url_for('certificates.admin_manage'))
+
+# إدارة رصيد الإجازات
+@admin_bp.route('/leave_balance')
+@login_required
+def leave_balance_management():
+    if not admin_required():
+        flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'danger')
+        return redirect(url_for('index'))
+    
+    employees = User.query.filter_by(role=Role.EMPLOYEE).order_by(User.name).all()
+    return render_template('admin/leave_balance.html', employees=employees)
+
+# تحديث رصيد الإجازات
+@admin_bp.route('/leave_balance/update/<int:user_id>', methods=['POST'])
+@login_required
+def update_leave_balance(user_id):
+    if not admin_required():
+        return jsonify({'success': False, 'message': 'غير مصرح'}), 403
+    
+    user = User.query.get_or_404(user_id)
+    
+    try:
+        new_balance = int(request.json.get('balance', 0))
+        if new_balance < 0:
+            return jsonify({'success': False, 'message': 'الرصيد لا يمكن أن يكون سالباً'}), 400
+        
+        old_balance = user.leave_balance
+        user.leave_balance = new_balance
+        db.session.commit()
+        
+        # تسجيل النشاط
+        log_activity('تحديث رصيد إجازة', 'user', user_id, 
+                    f'تم تحديث رصيد إجازة {user.name} من {old_balance} إلى {new_balance}')
+        
+        return jsonify({
+            'success': True,
+            'message': 'تم تحديث الرصيد بنجاح',
+            'new_balance': new_balance
+        })
+    except ValueError:
+        return jsonify({'success': False, 'message': 'قيمة غير صحيحة'}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'حدث خطأ أثناء تحديث الرصيد'}), 500

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}{% block page_title %}{% endblock %} - إدارة الشهادات{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">الرئيسية</a></li>
+                    {% if current_user.role in ['مدير النظام الأساسي', 'مدير نظام فرعي'] %}
+                    <li class="breadcrumb-item"><a href="{{ url_for('certificates.admin_manage') }}">إدارة الشهادات</a></li>
+                    {% else %}
+                    <li class="breadcrumb-item"><a href="{{ url_for('certificates.manage_certificates') }}">إدارة الشهادات</a></li>
+                    {% endif %}
+                    {% block breadcrumb %}{% endblock %}
+                </ol>
+            </nav>
+            
+            <h2 class="mb-4">
+                <i class="fas fa-certificate ms-2"></i>
+                {% block page_header %}{% endblock %}
+            </h2>
+        </div>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    {% block certificate_content %}{% endblock %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// تفعيل عناصر التواريخ
+$(document).ready(function() {
+    $('.datepicker').flatpickr({
+        dateFormat: 'Y-m-d',
+        locale: 'ar',
+        hijri: true,
+        disableMobile: true
+    });
+    
+    // تفعيل الألوان في حالة الحالة
+    $('.status-badge').each(function() {
+        const status = $(this).text().trim();
+        if (status === 'تمت') {
+            $(this).addClass('bg-success');
+        } else if (status === 'جاري العمل') {
+            $(this).addClass('bg-warning text-dark');
+        }
+    });
+});
+</script>
+{% endblock %}

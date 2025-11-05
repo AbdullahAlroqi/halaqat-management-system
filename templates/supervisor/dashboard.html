@@ -71,6 +71,12 @@
                             {% endif %}
                         </a>
                         {% endif %}
+                        {% if current_user.role == 'مشرف فرعي' %}
+                        <a href="{{ url_for('certificates.manage_certificates') }}" class="btn btn-islamic">
+                            <i class="fas fa-certificate ms-1"></i>
+                            إدارة الشهادات
+                        </a>
+                        {% endif %}
                         <a href="{{ url_for('supervisor.attendance') }}" class="btn btn-islamic-outline">
                             <i class="fas fa-user-check ms-1"></i>
                             تسجيل الحضور والغياب

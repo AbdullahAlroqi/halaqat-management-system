@@ -2,14 +2,11 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from config import Config
-<<<<<<< HEAD
 from models import db, User, Role, LeaveRequest, LeaveType, Schedule, Attendance, SystemSettings, Notification, ActivityLog, AbsenceStatus
-=======
-from models import db, User, Role, LeaveRequest, LeaveType, Schedule, Attendance, SystemSettings, Notification
->>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
 from routes_employee import employee_bp
 from routes_supervisor import supervisor_bp
 from routes_admin import admin_bp
+from routes_certificates import cert_bp
 from datetime import datetime, timedelta
 import os
 import openpyxl
@@ -29,6 +26,7 @@ login_manager.login_message = 'الرجاء تسجيل الدخول للوصول
 app.register_blueprint(employee_bp)
 app.register_blueprint(supervisor_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(cert_bp)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -38,7 +36,7 @@ def load_user(user_id):
 @app.context_processor
 def inject_settings():
     settings = SystemSettings.query.first()
-    return dict(system_settings=settings)
+    return dict(system_settings=settings, now=datetime.utcnow)
 
 # Decorators للتحقق من الأدوار
 def role_required(*roles):
@@ -81,7 +79,6 @@ def init_database():
             settings = SystemSettings()
             db.session.add(settings)
         
-<<<<<<< HEAD
         # إنشاء حالات الغياب الافتراضية
         if AbsenceStatus.query.count() == 0:
             default_statuses = [
@@ -95,8 +92,6 @@ def init_database():
                 status = AbsenceStatus(**status_data)
                 db.session.add(status)
         
-=======
->>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
         db.session.commit()
         print('تم تهيئة قاعدة البيانات بنجاح')
 

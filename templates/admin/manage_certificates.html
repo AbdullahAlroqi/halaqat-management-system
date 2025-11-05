@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+
+{% block title %}إدارة الشهادات - المدير{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-certificate ms-2"></i>
+                إدارة الشهادات
+            </h2>
+        </div>
+    </div>
+
+    <!-- الإحصائيات -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="stats-card">
+                <i class="fas fa-certificate"></i>
+                <h3>{{ certificates|length }}</h3>
+                <p>إجمالي الشهادات</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="stats-card">
+                <i class="fas fa-spinner"></i>
+                <h3>{{ certificates|selectattr('status', 'equalto', 'جاري العمل')|list|length }}</h3>
+                <p>جاري العمل</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="stats-card">
+                <i class="fas fa-check-circle"></i>
+                <h3>{{ certificates|selectattr('status', 'equalto', 'تمت')|list|length }}</h3>
+                <p>المكتملة</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-islamic">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+            <h5 class="mb-2 mb-md-0">
+                <i class="fas fa-list ms-2"></i>
+                قائمة الشهادات
+            </h5>
+            <div>
+                <a href="{{ url_for('certificates.admin_add_certificate') }}" class="btn btn-islamic btn-sm mb-2 mb-md-0">
+                    <i class="fas fa-plus ms-1"></i>
+                    إضافة شهادة
+                </a>
+                <button class="btn btn-sm btn-outline-primary" id="filterInProgress">
+                    <i class="fas fa-filter ms-1"></i>
+                    جاري العمل
+                </button>
+                <button class="btn btn-sm btn-outline-success" id="filterCompleted">
+                    <i class="fas fa-filter ms-1"></i>
+                    المكتملة
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" id="filterAll">
+                    <i class="fas fa-list ms-1"></i>
+                    الكل
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if certificates %}
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered text-center" id="certificatesTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>اسم الطالب</th>
+                            <th>الجنسية</th>
+                            <th>الجوال</th>
+                            <th>نوع الختمة</th>
+                            <th>تاريخ الختمة المتوقع</th>
+                            <th>المعلم</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cert in certificates %}
+                        <tr data-status="{{ cert.status }}">
+                            <td>{{ loop.index }}</td>
+                            <td>{{ cert.student_name }}</td>
+                            <td>{{ cert.nationality }}</td>
+                            <td>{{ cert.phone }}</td>
+                            <td>{{ cert.completion_type }}</td>
+                            <td>{{ cert.expected_completion_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ cert.teacher_name }}</td>
+                            <td>
+                                <select class="form-select form-select-sm status-selector" 
+                                        data-cert-id="{{ cert.id }}" 
+                                        style="width: auto; display: inline-block;">
+                                    <option value="جاري العمل" {% if cert.status == 'جاري العمل' %}selected{% endif %}>
+                                        جاري العمل
+                                    </option>
+                                    <option value="تمت" {% if cert.status == 'تمت' %}selected{% endif %}>
+                                        تمت
+                                    </option>
+                                </select>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-primary edit-cert-btn" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#editModal{{ cert.id }}"
+                                            title="تعديل">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger delete-cert-btn" 
+                                            data-cert-id="{{ cert.id }}"
+                                            data-cert-name="{{ cert.student_name }}"
+                                            title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Modal التعديل -->
+                        <div class="modal fade" id="editModal{{ cert.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">تعديل الشهادة - {{ cert.student_name }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('admin.edit_certificate', cert_id=cert.id) }}">
+                                        <div class="modal-body">
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">اسم الطالب</label>
+                                                    <input type="text" class="form-control" name="student_name" 
+                                                           value="{{ cert.student_name }}" required>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">الجنسية</label>
+                                                    <input type="text" class="form-control" name="nationality" 
+                                                           value="{{ cert.nationality }}" required>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">الجوال</label>
+                                                    <input type="text" class="form-control" name="phone" 
+                                                           value="{{ cert.phone }}" required>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">تاريخ الختمة المتوقع</label>
+                                                    <input type="date" class="form-control" name="expected_completion_date" 
+                                                           value="{{ cert.expected_completion_date.strftime('%Y-%m-%d') }}" required>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">الرواية</label>
+                                                    <input type="text" class="form-control" name="narration_type" 
+                                                           value="{{ cert.narration_type }}" required>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">المقرأة/الحلقات</label>
+                                                    <input type="text" class="form-control" name="halaqah" 
+                                                           value="{{ cert.halaqah }}" required>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">نوع الختمة</label>
+                                                    <input type="text" class="form-control" name="completion_type" 
+                                                           value="{{ cert.completion_type }}" required>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">اسم المعلم</label>
+                                                    <input type="text" class="form-control" name="teacher_name" 
+                                                           value="{{ cert.teacher_name }}" required>
+                                                </div>
+                                                <div class="col-12 mb-3">
+                                                    <label class="form-label">ملاحظات</label>
+                                                    <textarea class="form-control" name="notes" rows="3">{{ cert.notes if cert.notes else '' }}</textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                                            <button type="submit" class="btn btn-islamic">حفظ التغييرات</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle ms-2"></i>
+                لا توجد شهادات مسجلة حتى الآن
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تحديث حالة الشهادة
+    document.querySelectorAll('.status-selector').forEach(function(select) {
+        select.addEventListener('change', function() {
+            const certId = this.dataset.certId;
+            const newStatus = this.value;
+            
+            fetch(`/certificates/admin/update_status/${certId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    status: newStatus
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // تحديث البيانات في الصفحة
+                    const row = this.closest('tr');
+                    row.dataset.status = newStatus;
+                    
+                    // إظهار رسالة نجاح
+                    alert('تم تحديث الحالة بنجاح');
+                } else {
+                    alert('حدث خطأ: ' + data.message);
+                    this.value = this.dataset.originalValue;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء تحديث الحالة');
+                this.value = this.dataset.originalValue;
+            });
+        });
+        
+        // حفظ القيمة الأصلية
+        select.dataset.originalValue = select.value;
+    });
+    
+    // حذف شهادة
+    document.querySelectorAll('.delete-cert-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const certId = this.dataset.certId;
+            const certName = this.dataset.certName;
+            
+            if (confirm(`هل أنت متأكد من حذف شهادة الطالب: ${certName}؟\n\nهذه العملية لا يمكن التراجع عنها!`)) {
+                fetch(`/certificates/admin/delete/${certId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        window.location.reload();
+                    } else {
+                        alert('خطأ: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('حدث خطأ أثناء حذف الشهادة');
+                });
+            }
+        });
+    });
+    
+    // فلترة الشهادات
+    document.getElementById('filterAll').addEventListener('click', function() {
+        document.querySelectorAll('#certificatesTable tbody tr').forEach(row => {
+            row.style.display = '';
+        });
+    });
+    
+    document.getElementById('filterInProgress').addEventListener('click', function() {
+        document.querySelectorAll('#certificatesTable tbody tr').forEach(row => {
+            if (row.dataset.status === 'جاري العمل') {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+    
+    document.getElementById('filterCompleted').addEventListener('click', function() {
+        document.querySelectorAll('#certificatesTable tbody tr').forEach(row => {
+            if (row.dataset.status === 'تمت') {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

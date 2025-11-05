@@ -35,6 +35,7 @@
                                     <th>اسم الإجازة</th>
                                     <th>الحد الأقصى (أيام)</th>
                                     <th>يتطلب مرفق</th>
+                                    <th>تخصم من الرصيد</th>
                                     <th>الحالة</th>
                                     <th>تاريخ الإنشاء</th>
                                     <th>الإجراءات</th>
@@ -51,6 +52,13 @@
                                         <span class="badge bg-warning text-dark">نعم</span>
                                         {% else %}
                                         <span class="badge bg-secondary">لا</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if lt.deduct_from_balance %}
+                                        <span class="badge bg-danger">نعم</span>
+                                        {% else %}
+                                        <span class="badge bg-info">لا</span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -105,12 +113,23 @@
                         <input type="number" class="form-control" id="max_days" name="max_days" 
                                min="1" required>
                     </div>
-                    <div class="form-check">
+                    <div class="form-check mb-2">
                         <input class="form-check-input" type="checkbox" id="requires_attachment" 
                                name="requires_attachment">
                         <label class="form-check-label" for="requires_attachment">
                             يتطلب رفع مرفق
                         </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="deduct_from_balance" 
+                               name="deduct_from_balance" checked>
+                        <label class="form-check-label" for="deduct_from_balance">
+                            <i class="fas fa-minus-circle text-danger ms-1"></i>
+                            تخصم من رصيد الإجازات
+                        </label>
+                        <small class="form-text text-muted d-block">
+                            عند التحديد، سيتم خصم أيام الإجازة من رصيد الموظف تلقائياً عند القبول
+                        </small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -150,6 +169,14 @@
                                name="requires_attachment" {% if lt.requires_attachment %}checked{% endif %}>
                         <label class="form-check-label" for="requires_attachment{{ lt.id }}">
                             يتطلب مرفق
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="deduct_from_balance{{ lt.id }}" 
+                               name="deduct_from_balance" {% if lt.deduct_from_balance %}checked{% endif %}>
+                        <label class="form-check-label" for="deduct_from_balance{{ lt.id }}">
+                            <i class="fas fa-minus-circle text-danger ms-1"></i>
+                            تخصم من رصيد الإجازات
                         </label>
                     </div>
                     <div class="form-check">

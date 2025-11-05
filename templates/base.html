@@ -120,6 +120,13 @@
                             </a>
                         </li>
                         {% endif %}
+                        {% if current_user.role == 'مشرف فرعي' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('certificates.manage_certificates') }}">
+                                <i class="fas fa-certificate ms-1"></i> الشهادات
+                            </a>
+                        </li>
+                        {% endif %}
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('supervisor.attendance') }}">
                                 <i class="fas fa-user-check ms-1"></i> الحضور والغياب
@@ -156,7 +163,6 @@
                             </a>
                         </li>
                         <li class="nav-item">
-<<<<<<< HEAD
                             <a class="nav-link" href="{{ url_for('admin.attendance_management') }}">
                                 <i class="fas fa-clipboard-check ms-1"></i> التحضير
                             </a>
@@ -181,8 +187,6 @@
                             </ul>
                         </li>
                         <li class="nav-item">
-=======
->>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
                             <a class="nav-link" href="{{ url_for('admin.leave_requests') }}">
                                 <i class="fas fa-inbox ms-1"></i> طلبات الإجازات
                             </a>
@@ -190,6 +194,11 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('admin.reports') }}">
                                 <i class="fas fa-chart-bar ms-1"></i> التقارير
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('certificates.admin_manage') }}">
+                                <i class="fas fa-certificate ms-1"></i> الشهادات
                             </a>
                         </li>
                         {% if current_user.role == 'مدير النظام الأساسي' %}

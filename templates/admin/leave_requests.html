@@ -56,6 +56,7 @@
                                     <th>من تاريخ</th>
                                     <th>إلى تاريخ</th>
                                     <th>الأيام</th>
+                                    <th>رصيد الإجازات</th>
                                     <th>السبب</th>
                                     <th>الحالة</th>
                                     <th>الإجراءات</th>
@@ -70,6 +71,11 @@
                                     <td>{{ req.end_date.strftime('%Y-%m-%d') }}</td>
                                     <td>
                                         <span class="badge bg-primary">{{ req.days_count }} يوم</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if req.employee.leave_balance > 0 %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                            {{ req.employee.leave_balance }} يوم
+                                        </span>
                                     </td>
                                     <td>{{ req.reason[:50] }}...</td>
                                     <td>

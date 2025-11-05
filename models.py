@@ -2,7 +2,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
-<<<<<<< HEAD
 import pytz
 
 db = SQLAlchemy()
@@ -14,11 +13,6 @@ def get_saudi_time():
     """الحصول على الوقت الحالي بتوقيت السعودية"""
     return datetime.now(SAUDI_TZ)
 
-=======
-
-db = SQLAlchemy()
-
->>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
 # جدول الأدوار
 class Role:
     EMPLOYEE = 'موظف'
@@ -63,6 +57,9 @@ class User(UserMixin, db.Model):
     
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # رصيد الإجازات
+    leave_balance = db.Column(db.Integer, default=0)  # رصيد أيام الإجازة المتاحة
     
     # العلاقة مع المشرف
     supervisor_id = db.Column(db.Integer, db.ForeignKey('users.id'))
@@ -111,6 +108,7 @@ class LeaveType(db.Model):
     name = db.Column(db.String(100), nullable=False, unique=True)
     max_days = db.Column(db.Integer, nullable=False)
     requires_attachment = db.Column(db.Boolean, default=False)
+    deduct_from_balance = db.Column(db.Boolean, default=True)  # تخصم من رصيد الإجازات
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -150,19 +148,13 @@ class Attendance(db.Model):
     employee_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(20), nullable=False)  # حاضر / غائب / إجازة
-<<<<<<< HEAD
     absence_status_id = db.Column(db.Integer, db.ForeignKey('absence_statuses.id'))  # الربط بحالة الغياب
-=======
->>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
     notes = db.Column(db.Text)
     recorded_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     recorder = db.relationship('User', foreign_keys=[recorded_by])
-<<<<<<< HEAD
     absence_status = db.relationship('AbsenceStatus', backref='attendance_records')
-=======
->>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
     
     __table_args__ = (db.UniqueConstraint('employee_id', 'date', name='_employee_date_uc'),)
     
@@ -202,7 +194,6 @@ class Notification(db.Model):
     
     def __repr__(self):
         return f'<Notification {self.title}>'
-<<<<<<< HEAD
 
 # نموذج سجل النشاطات (Activity Logs)
 class ActivityLog(db.Model):
@@ -235,5 +226,32 @@ class AbsenceStatus(db.Model):
     
     def __repr__(self):
         return f'<AbsenceStatus {self.name}>'
-=======
->>>>>>> 2af5888e290fafbfb39432b6ce530ed87f045bdf
+
+# نموذج الشهادات
+class Certificate(db.Model):
+    __tablename__ = 'certificates'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    student_name = db.Column(db.String(100), nullable=False)
+    nationality = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20), nullable=False)
+    expected_completion_date = db.Column(db.Date, nullable=False)
+    narration_type = db.Column(db.String(100), nullable=False)  # نوع الرواية
+    halaqah = db.Column(db.String(100), nullable=False)  # المقرأة أو الحلقات
+    completion_type = db.Column(db.String(100), nullable=False)  # نوع الختمة: تلاوة، حفظ، عرض ختمة
+    teacher_name = db.Column(db.String(100), nullable=False)  # اسم المعلم
+    status = db.Column(db.String(50), default='جاري العمل')  # جاري العمل / تمت
+    notes = db.Column(db.Text)
+    
+    # معلومات التتبع
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    
+    # العلاقات
+    creator = db.relationship('User', foreign_keys=[created_by])
+    updater = db.relationship('User', foreign_keys=[updated_by])
+    
+    def __repr__(self):
+        return f'<Certificate {self.student_name} - {self.completion_type}>'

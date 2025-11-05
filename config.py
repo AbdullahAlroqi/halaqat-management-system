@@ -5,8 +5,8 @@ class Config:
     # مسار المشروع
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
     
-    # المفتاح السري
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'halaqat-makkah-secret-key-2024'
+    # المفتاح السري - يجب تغييره في الإنتاج عبر متغير البيئة SECRET_KEY
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-change-this-in-production-12345'
     
     # إعدادات قاعدة البيانات
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \

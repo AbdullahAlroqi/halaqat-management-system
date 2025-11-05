@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}إدارة رصيد الإجازات{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-calendar-check ms-2"></i>
+                إدارة رصيد الإجازات
+            </h2>
+        </div>
+    </div>
+
+    <div class="card-islamic">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-users ms-2"></i>
+                قائمة الموظفين ورصيد إجازاتهم
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if employees %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle ms-2"></i>
+                <strong>ملاحظة:</strong> اضغط على زر التعديل لتحديث رصيد أيام الإجازة لكل موظف
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>رقم الهوية</th>
+                            <th>اسم الموظف</th>
+                            <th>القسم</th>
+                            <th>رصيد الإجازات (أيام)</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in employees %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ emp.national_id }}</td>
+                            <td>{{ emp.name }}</td>
+                            <td>{{ emp.department if emp.department else '-' }}</td>
+                            <td>
+                                <span class="badge {% if emp.leave_balance > 0 %}bg-success{% else %}bg-warning text-dark{% endif %}" 
+                                      id="balance-{{ emp.id }}">
+                                    {{ emp.leave_balance }} يوم
+                                </span>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-primary edit-balance-btn" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#balanceModal{{ emp.id }}"
+                                        title="تعديل الرصيد">
+                                    <i class="fas fa-edit"></i> تعديل
+                                </button>
+                            </td>
+                        </tr>
+                        
+                        <!-- Modal تعديل الرصيد -->
+                        <div class="modal fade" id="balanceModal{{ emp.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">تعديل رصيد الإجازة - {{ emp.name }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">الرصيد الحالي:</label>
+                                            <h4><span class="badge bg-info">{{ emp.leave_balance }} يوم</span></h4>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="new_balance_{{ emp.id }}" class="form-label">
+                                                <i class="fas fa-calendar-plus ms-1"></i>
+                                                الرصيد الجديد (أيام): <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="number" 
+                                                   class="form-control" 
+                                                   id="new_balance_{{ emp.id }}" 
+                                                   min="0" 
+                                                   value="{{ emp.leave_balance }}" 
+                                                   required>
+                                            <small class="text-muted">أدخل عدد أيام الإجازة المتاحة</small>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                                        <button type="button" 
+                                                class="btn btn-islamic save-balance-btn" 
+                                                data-user-id="{{ emp.id }}"
+                                                data-user-name="{{ emp.name }}">
+                                            <i class="fas fa-save ms-1"></i>
+                                            حفظ التغييرات
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle ms-2"></i>
+                لا يوجد موظفون مسجلون في النظام
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // حفظ تعديل الرصيد
+    document.querySelectorAll('.save-balance-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            const userName = this.dataset.userName;
+            const newBalance = document.getElementById(`new_balance_${userId}`).value;
+            
+            if (newBalance === '' || newBalance < 0) {
+                alert('الرجاء إدخال رصيد صحيح');
+                return;
+            }
+            
+            // إرسال الطلب
+            fetch(`/admin/leave_balance/update/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    balance: parseInt(newBalance)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // تحديث البادج في الصفحة
+                    const badge = document.getElementById(`balance-${userId}`);
+                    badge.textContent = `${data.new_balance} يوم`;
+                    badge.className = data.new_balance > 0 ? 'badge bg-success' : 'badge bg-warning text-dark';
+                    
+                    // إغلاق النافذة المنبثقة
+                    const modalElement = document.getElementById('balanceModal' + userId);
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) {
+                        modal.hide();
+                    }
+                    
+                    // إظهار رسالة نجاح
+                    alert(`تم تحديث رصيد الإجازة لـ ${userName} بنجاح`);
+                } else {
+                    alert('خطأ: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء تحديث الرصيد');
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
